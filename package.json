@@ -1,0 +1,27 @@
+{
+  "name": "malinaart",
+  "version": "1.0.0",
+  "description": "Segey Malina Fine Art portfolio",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node ./server/index.js",
+    "build": "next build",
+    "start": "NODE_ENV=production node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gen-a/malinaart.git"
+  },
+  "author": "Gennady Pugachevsky",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gen-a/malinaart/issues"
+  },
+  "homepage": "https://github.com/gen-a/malinaart#readme",
+  "dependencies": {
+    "next": "^8.1.0",
+    "next-routes": "^1.4.2",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6"
+  }
+}
