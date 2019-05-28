@@ -1,0 +1,20 @@
+{
+  "server": {
+    "port": 3000,
+    "host": "127.0.0.1"
+  },
+  "corsOrigin": "http://127.0.0.1:3001",
+  "mail": {
+    "host": "smtp.gmail.com",
+    "port": 587,
+    "user": "update.48ukraine.com@gmail.com"
+  },
+  "jwt": {
+    "publicKeyFile": "lib/jwt/public.key"
+  },
+  "app": {
+    "dataUrl": "https://48ukraine.com",
+    "httpName": "https://js1-48ukraine.herokuapp.com",
+    "mailFrom": "update.48ukraine.com@gmail.com"
+  }
+}

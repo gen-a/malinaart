@@ -1,11 +1,13 @@
 import Link from 'next/link';
 import Router from 'next/router';
+import {get} from '../services/axios-request';
 
-function Home({isServer}) {
+
+function Home({isServer, data}) {
   console.log('render', new Date());
   return (
     <div>
-      <h1>Welcome to Next.js! Is it on server? - {isServer ? 'Yes' : 'No'}</h1>
+      <h1>Welcome to Next.js! Is it on server? - {isServer ? 'Yes' : 'No'} {data.foo} </h1>
       <Link href="/test?slug=something" as="/test/something">
         <a>here</a>
       </Link>
@@ -19,8 +21,7 @@ function Home({isServer}) {
 }
 
 Home.getInitialProps = async ({ req }) => {
-  const res = await fetch('/api/data.json');
-  const data = await res.json();
+  const data = await get('http://localhost:3000/api');
   return { isServer: !!req, data };
 };
 
