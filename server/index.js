@@ -3,7 +3,7 @@ const next = require('next');
 const config = require('./config');
 const expressServer = require('./express-server');
 const clientRoutes = require('./routes');
-const serverRoutes = require('./routes/user');
+const serverRoutes = require('./routes/api');
 const db = require('./db');
 
 const dev = process.env.NODE_ENV !== 'production';
@@ -17,7 +17,7 @@ app.prepare()
   .then(() => {
 
     /** Back-end */
-    server.use('/api/user', serverRoutes);
+    server.use('/api', serverRoutes);
 
     /** Front end */
     server.get('*', (req, res) => {
