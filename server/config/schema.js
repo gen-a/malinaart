@@ -3,12 +3,29 @@ const fs = require('fs');
 const { checkRequired } = require('../lib/env-params');
 
 /** Check required parameters. */
-const params = ['DB_MONGO_URL', 'DB_MONGO_URL_TEST', 'SESSION_SECRET_KEY', 'MAIL_PASS', 'JWT_PRIVATE_KEY'];
+const params = [
+  'DB_MONGO_URL',
+  'DB_MONGO_URL__TEST',
+  'SESSION_SECRET_KEY',
+  'MAIL_PASS',
+  'MAIL_PASS__DEV',
+  'MAIL_PASS__TEST',
+  'JWT_PRIVATE_KEY'
+];
 checkRequired(params);
 
 /** Set env parameters depending on mode. */
-if (process.env.NODE_ENV === 'test') {
-  process.env.DB_MONGO_URL = process.env.DB_MONGO_URL_TEST;
+const suffixes = { test: '__TEST', development: '__DEV' };
+if (suffixes.hasOwnProperty(process.env.NODE_ENV)) {
+
+  const suffix = suffixes[process.env.NODE_ENV];
+  const regexp = new RegExp(`${suffix}$`);
+
+  Object.keys(process.env).forEach(k => {
+    if (k.match(regexp) !== null) {
+      process.env[k.substr(0, k.length - suffix.length)] = process.env[k];
+    }
+  });
 }
 
 /** Destructurization of process.env for using in schema. */

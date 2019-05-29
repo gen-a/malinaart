@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Router from 'next/router';
-import {get} from '../services/axios-request';
+import {getRequest} from '../services/axios-request';
 
 
 function Home({isServer, data}) {
@@ -21,7 +21,7 @@ function Home({isServer, data}) {
 }
 
 Home.getInitialProps = async ({ req }) => {
-  const data = await get('http://localhost:3000/api');
+  const data = await getRequest('http://localhost:3000/api');
   return { isServer: !!req, data };
 };
 

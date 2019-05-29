@@ -51,6 +51,10 @@ exports.handleErrors = (subject, err, res, indexMap = {}) => {
     res.status(422).json(this.validatorErrorToResponse(subject, err));
     return;
   }
+  if(err.name && err.name === 'DuplicateKeyError'){
+    res.status(422).json(response({key: err.key}, `${subject}.error.duplicateKeyError`, 1));
+    return;
+  }
   if(err.name && err.name === 'MongoError' && err.code === 11000 && err.errmsg.indexOf('duplicate key error') !== -1){
     res.status(409).json(this.duplicateKeyErrorToResponse(subject, err, indexMap));
     return;

@@ -34,8 +34,24 @@ class InternalError extends DomainError {
   }
 }
 
+class ValidationError extends DomainError {
+  constructor(message, errors) {
+    super(message);
+    this.errors = errors;
+  }
+}
+
+class DuplicateKeyError extends DomainError {
+  constructor(message, key) {
+    super(message);
+    this.key = key;
+  }
+}
+
 module.exports = {
   MissingRequiredParametersError,
   ResourceNotFoundError,
   InternalError,
+  ValidationError,
+  DuplicateKeyError,
 };

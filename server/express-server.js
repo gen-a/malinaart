@@ -33,7 +33,7 @@ const app = function(){
   server.use(bodyParser.json());
   server.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
   server.use(cookieParser());
-  //server.use(session());
+  server.use(session());
 
   return server;
 };

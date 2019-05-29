@@ -2,26 +2,23 @@ const { response } = require('../lib/response/response');
 const User = require('../models/user');
 const mongoose = require('mongoose');
 const { handleErrors } = require('../lib/response/errors-to-response');
-const { ResourceNotFoundError } = require('../lib/errors');
+const { ResourceNotFoundError, ValidationError } = require('../lib/errors');
 /**
  * Add user to collection
  * @param req
  * @param res
- * @param next
  * @returns {*}
  */
-exports.add = (req, res, next) => {
+exports.add = (req, res ) => {
   const { email, password } = req.body;
   const newUser = new User({ email, password, _id: new mongoose.Types.ObjectId() });
 
   newUser.save()
     .then((result) => {
       res.status(200).json(response(result, 'user.info.addedSuccessfully', 0));
-      next();
     })
     .catch((err) => {
       handleErrors('user', err, res, { email_1: 'email' });
-      next();
     });
 
 };
@@ -34,9 +31,10 @@ exports.add = (req, res, next) => {
  */
 exports.update = (req, res, next) => {
 
+  const id = { message: 'user.error.idIsInvalid' };
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-    handleErrors('user', new ResourceNotFoundError(), res, { email_1: 'email' });
-    return next();
+    handleErrors('user', new ValidationError('user.error.validationError', { id }), res);
+    return;
   }
 
   User.findOne({ _id: new mongoose.Types.ObjectId(req.params.id) })
@@ -53,11 +51,9 @@ exports.update = (req, res, next) => {
     })
     .then((result) => {
       res.status(200).json(response(result, 'user.info.updatedSuccessfully', 0));
-      next();
     })
     .catch((err) => {
       handleErrors('user', err, res, { email_1: 'email' });
-      next();
     });
 
 };
@@ -65,14 +61,14 @@ exports.update = (req, res, next) => {
  * Find user by id
  * @param req
  * @param res
- * @param next
  * @returns {*}
  */
-exports.findById = (req, res, next) => {
+exports.findById = (req, res) => {
 
+  const id = { message: 'user.error.idIsInvalid' };
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-    handleErrors('user', new ResourceNotFoundError(), res, { email_1: 'email' });
-    return next();
+    handleErrors('user', new ValidationError('user.error.validationError', { id }), res);
+    return;
   }
 
   User.findOne({ _id: new mongoose.Types.ObjectId(req.params.id) })
@@ -81,11 +77,9 @@ exports.findById = (req, res, next) => {
         throw new ResourceNotFoundError();
       }
       res.status(200).json(response(document, 'user.info.foundSuccessfully', 0));
-      next();
     })
     .catch((err) => {
       handleErrors('user', err, res, { email_1: 'email' });
-      next();
     });
 
 };
@@ -94,14 +88,14 @@ exports.findById = (req, res, next) => {
  * Delete user by id
  * @param req
  * @param res
- * @param next
  * @returns {*}
  */
-exports.deleteById = (req, res, next) => {
+exports.deleteById = (req, res) => {
 
+  const id = { message: 'user.error.idIsInvalid' };
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-    handleErrors('user', new ResourceNotFoundError(), res, { email_1: 'email' });
-    return next();
+    handleErrors('user', new ValidationError('user.error.validationError', { id }), res);
+    return;
   }
 
   User.deleteOne({ _id: new mongoose.Types.ObjectId(req.params.id) })
@@ -110,11 +104,9 @@ exports.deleteById = (req, res, next) => {
         throw new ResourceNotFoundError();
       }
       res.status(200).json(response({}, 'user.info.deletedSuccessfully', 0));
-      next();
     })
     .catch((err) => {
       handleErrors('user', err, res, { email_1: 'email' });
-      next();
     });
 
 };

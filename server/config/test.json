@@ -5,9 +5,9 @@
   },
   "corsOrigin": "http://127.0.0.1:3001",
   "mail": {
-    "host": "smtp.gmail.com",
+    "host": "smtp.ethereal.email",
     "port": 587,
-    "user": "update.48ukraine.com@gmail.com"
+    "user": "vivian.dooley57@ethereal.email"
   },
   "jwt": {
     "publicKeyFile": "lib/jwt/public.key"

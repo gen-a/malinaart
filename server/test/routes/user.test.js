@@ -79,7 +79,7 @@ describe('/routes/user.js API Integration Tests', function(){
       request(app)
         .get(`/api/user/111`)
         .end((err, res) => {
-          predict.response(res, 'user.error.resourceNotFoundError', 1, 404);
+          predict.response(res, 'user.error.validationError', 1, 422);
           done();
         });
     });
@@ -92,7 +92,7 @@ describe('/routes/user.js API Integration Tests', function(){
       request(app)
         .delete(`/api/user/111`)
         .end((err, res) => {
-          predict.response(res, 'user.error.resourceNotFoundError', 1, 404);
+          predict.response(res, 'user.error.validationError', 1, 422);
           done();
         });
     });
@@ -117,51 +117,6 @@ describe('/routes/user.js API Integration Tests', function(){
 
   });
 
-
-
-
-
-
-
-
-  /*
-
-  describe('PUT /data/user/profile', () => {
-    it('should fail on for not logged in users', (done) => {
-      request(app)
-        .put('/data/user/profile')
-        .send({})
-        .end((err, res) => {
-          predict.response(res, 'auth.error.noUserFound', 1, 404);
-          done();
-        });
-    });
-  });
-
-  describe('GET /data/user/profile', () => {
-    it('should fail on for not logged in users', (done) => {
-      request(app)
-        .get('/data/user/profile')
-        .send({})
-        .end((err, res) => {
-          predict.response(res, 'auth.error.noUserFound', 1, 404);
-          done();
-        });
-    });
-  });
-
-  describe('PUT /data/user/password', () => {
-    it('should fail on for not logged in users', (done) => {
-      request(app)
-        .put('/data/user/password')
-        .send({})
-        .end((err, res) => {
-          predict.response(res, 'auth.error.noUserFound', 1, 404);
-          done();
-        });
-    });
-  });
-*/
   after((done) => {
     user.remove()
       .then(() => done())
