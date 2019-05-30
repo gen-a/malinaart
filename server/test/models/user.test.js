@@ -1,6 +1,6 @@
 const { expect } = require('chai');
 const User = require('../../models/user');
-const { connect } = require('../../db');
+const { connect } = require('../../services/db');
 const mongoose = require('mongoose');
 const { exitIfNotTest } = require('../../lib/env-params');
 const user = require('../user');

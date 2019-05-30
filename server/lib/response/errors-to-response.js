@@ -45,19 +45,19 @@ exports.duplicateKeyErrorToResponse = (subject, src, indexMap) => {
 exports.handleErrors = (subject, err, res, indexMap = {}) => {
   if(err.name && err.name === 'ResourceNotFoundError'){
     res.status(404).json(response({}, `${subject}.error.resourceNotFoundError`, 1));
-    return;
+    return null;
   }
   if(err.name && err.name === 'ValidationError'){
     res.status(422).json(this.validatorErrorToResponse(subject, err));
-    return;
+    return null;
   }
   if(err.name && err.name === 'DuplicateKeyError'){
     res.status(422).json(response({key: err.key}, `${subject}.error.duplicateKeyError`, 1));
-    return;
+    return null;
   }
   if(err.name && err.name === 'MongoError' && err.code === 11000 && err.errmsg.indexOf('duplicate key error') !== -1){
     res.status(409).json(this.duplicateKeyErrorToResponse(subject, err, indexMap));
-    return;
+    return null;
   }
-  res.status(500).json(response(err, '', 1));
+  res.status(400).json(response(err, '', 1));
 };

@@ -1,7 +1,11 @@
 const mongoose = require('mongoose');
+const db = require('../services/db');
 const User = require('../models/user');
 
-mongoose.set('useCreateIndex', true);
+/**
+ * Connect to db
+ */
+exports.connect = db.connect;
 
 /**
  * New temporary User data

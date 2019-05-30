@@ -2,23 +2,25 @@ const fs = require('fs');
 const jwt = require('jsonwebtoken');
 const path = require('path');
 const expressJwt = require('express-jwt');
-require('dotenv').config({ path: path.resolve(__dirname, '../../../.env') });
+const randToken = require('rand-token');
+const ms = require('ms');
+const config = require('../../config');
+
 /**
  * http://travistidwell.com/jsencrypt/demo/ - online key generator
- * const privateKey = fs.readFileSync(path.resolve(__dirname, './private.key'), 'utf8');
  */
-const privateKey = process.env.JWT_PRIVATE_KEY;
-const publicKey = fs.readFileSync(path.resolve(__dirname, './public.key'), 'utf8');
+const privateKey = config.get('jwt.privateKey');
+const publicKey = config.get('jwt.publicKey');
 
 const signOptions = {
   /** Software organization who issues the token. */
-  issuer: '48Ukraine',
+  issuer: config.get('jwt.issuer'),
   /** Intended user of the token. */
-  subject: 'some@user.com',
+  subject: config.get('jwt.subject'),
   /** Basically identity of the intended recipient of the token. */
-  audience: 'http://48ukraine.com',
+  audience: config.get('jwt.audience'),
   /** Expiration time after which the token will be invalid. */
-  expiresIn: '12h',
+  expiresIn: config.get('jwt.expiresIn'),
   /** Encryption algorithm to be used to protect the token. */
   algorithm: 'RS256'
 };
@@ -64,3 +66,17 @@ exports.verify = (token) => {
 exports.decode = (token) => {
   return jwt.decode(token, { complete: true });
 };
+/**
+ * Public key
+ */
+exports.publicKey = publicKey;
+
+/**
+ * Refresh token
+ */
+exports.refreshToken = () => randToken.uid(256);
+
+/**
+ * Refresh token limit time milliseconds
+ */
+exports.refreshTokenLimitTime = ms(config.get('jwt.refreshKey.expiresIn'));

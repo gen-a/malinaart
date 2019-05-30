@@ -30,7 +30,7 @@ if (suffixes.hasOwnProperty(process.env.NODE_ENV)) {
 
 /** Destructurization of process.env for using in schema. */
 const {
-  DB_MONGO_URL, SESSION_SECRET_KEY, MAIL_PASS, JWT_PRIVATE_KEY
+  DB_MONGO_URL, SESSION_SECRET_KEY, MAIL_PASS, JWT_PRIVATE_KEY, JWT_PUBLIC_KEY
 } = process.env;
 
 /** Export schema. */
@@ -117,11 +117,41 @@ module.exports = {
       env: 'JWT_PRIVATE_KEY',
       sensitive: true
     },
-    publicKeyFile: {
-      doc: 'JWT public key file.',
-      format: value => fs.existsSync(path.resolve(__dirname, '../', value)),
-      default: 'lib/jwt/public.key'
+    publicKey: {
+      doc: 'JWT public key.',
+      format: String,
+      default: JWT_PUBLIC_KEY,
+      env: 'JWT_PUBLIC_KEY',
+      sensitive: true
     },
+    expiresIn:{
+      doc: 'JWT expiration time limit in ms format',
+      format: String,
+      default: '30m'
+    },
+    audience:{
+      doc: 'JWT audience',
+      format: String,
+      default: 'http://malinaart.com'
+    },
+    issuer:{
+      doc: 'JWT issuer',
+      format: String,
+      default: 'MalinaArt'
+    },
+    subject:{
+      doc: 'JWT subject',
+      format: String,
+      default: 'user@malinaart.com'
+    },
+    refreshKey: {
+      expiresIn:{
+        doc: 'Refresh key expiration time limit in ms format',
+        format: String,
+        default: '30d'
+      }
+    }
+
   },
   app: {
     dataUrl: {

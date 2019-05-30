@@ -6,12 +6,15 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 const flash = require('connect-flash');
 
-const session = require('./express-session');
+const usePassport = require('./services/passport');
+const useSession = require('./services/session');
 const config = require('./config');
+const serverRoutes = require('./routes/server/index');
+const db = require('./services/db');
+const PORT = config.get('server.port');
 
 
-
-const app = function(){
+const app = function(nextHandler){
   const server = express();
 
   /** Middlewares */
@@ -33,8 +36,25 @@ const app = function(){
   server.use(bodyParser.json());
   server.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
   server.use(cookieParser());
-  server.use(session());
 
+  useSession(server);
+  usePassport(server);
+
+  /** Back-end */
+  server.use('/api', serverRoutes);
+
+  /** Front end */
+  server.get('*', (req, res) => {
+    return nextHandler(req, res);
+  });
+
+  db.connect()
+    .then(() => {
+      server.listen(PORT, (err) => {
+        if (err) throw err;
+        console.log(`> Server running at http://${config.get('server.host')}:${PORT}/`);
+      });
+    });
   return server;
 };
 

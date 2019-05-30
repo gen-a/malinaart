@@ -9,9 +9,6 @@
     "port": 587,
     "user": "vivian.dooley57@ethereal.email"
   },
-  "jwt": {
-    "publicKeyFile": "lib/jwt/public.key"
-  },
   "app": {
     "dataUrl": "https://48ukraine.com",
     "httpName": "https://js1-48ukraine.herokuapp.com",

@@ -1,15 +1,12 @@
-const mongoose = require('mongoose');
 const request = require('supertest');
 const chai = require('chai');
-const app = require('../../index');
+const app = require('../app');
 const user = require('../user');
 const predict = require('../api-predict');
 const { expect } = require('chai');
 const { exitIfNotTest } = require('../../lib/env-params');
 
 exitIfNotTest();
-/** To make Mongoose's default index build use createIndex() instead of ensureIndex() to avoid deprecation warnings. */
-mongoose.set('useCreateIndex', true);
 
 describe('/routes/auth.js API Integration Tests', function() {
 
@@ -18,7 +15,8 @@ describe('/routes/auth.js API Integration Tests', function() {
 
   /** Prepare db collection. */
   before((done) => {
-    user.remove()
+    user.connect()
+      .then(() => user.remove())
       .then(() => user.create())
       .then((res) => {
         done();

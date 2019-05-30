@@ -1,41 +1,20 @@
 const next = require('next');
 
-const config = require('./config');
-const expressServer = require('./express-server');
-const clientRoutes = require('./routes');
-const serverRoutes = require('./routes/api');
-const db = require('./db');
+const expressServer = require('./server');
+const clientRoutes = require('./routes/client/index');
 
 const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
 const handler = clientRoutes.getRequestHandler(app);
-const PORT = config.get('server.port');
-
-const server = expressServer();
 
 app.prepare()
   .then(() => {
-
-    /** Back-end */
-    server.use('/api', serverRoutes);
-
-    /** Front end */
-    server.get('*', (req, res) => {
-      return handler(req, res);
-    });
-
-    db.connect()
-      .then(() => {
-        server.listen(PORT, (err) => {
-          if (err) throw err;
-          console.log(`> Server running at http://${config.get('server.host')}:${PORT}/`);
-        });
-      });
+    expressServer(handler);
   })
   .catch((ex) => {
     console.error(ex.stack);
     process.exit(1);
   });
 
-module.exports = server;
+
 

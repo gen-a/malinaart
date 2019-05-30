@@ -68,7 +68,7 @@ exports.findById = (req, res) => {
   const id = { message: 'user.error.idIsInvalid' };
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
     handleErrors('user', new ValidationError('user.error.validationError', { id }), res);
-    return;
+    return null;
   }
 
   User.findOne({ _id: new mongoose.Types.ObjectId(req.params.id) })
@@ -95,7 +95,7 @@ exports.deleteById = (req, res) => {
   const id = { message: 'user.error.idIsInvalid' };
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
     handleErrors('user', new ValidationError('user.error.validationError', { id }), res);
-    return;
+    return null;
   }
 
   User.deleteOne({ _id: new mongoose.Types.ObjectId(req.params.id) })
