@@ -8,6 +8,6 @@ exports.checkRequiredInBody = (keys) => (req, res, next) => {
   if (failed.length === 0) {
     return next();
   }
-  res.status(404).json(response({ failed }, 'error.missingRequiredParameters', 1));
+  res.status(422).json(response({ failed }, 'error.missingRequiredParameters', 1));
   return null;
 };

@@ -15,10 +15,10 @@ exports.add = (req, res ) => {
 
   newUser.save()
     .then((result) => {
-      res.status(200).json(response(result, 'user.info.addedSuccessfully', 0));
+      res.status(200).json(response(result, 'info.addedSuccessfully', 0));
     })
     .catch((err) => {
-      handleErrors('user', err, res, { email_1: 'email' });
+      handleErrors(err, res, { email_1: 'email' });
     });
 
 };
@@ -31,9 +31,9 @@ exports.add = (req, res ) => {
  */
 exports.update = (req, res, next) => {
 
-  const id = { message: 'user.error.idIsInvalid' };
+  const id = { message: 'error.idIsInvalid' };
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-    handleErrors('user', new ValidationError('user.error.validationError', { id }), res);
+    handleErrors(new ValidationError('error.validationError', { id }), res);
     return;
   }
 
@@ -50,10 +50,10 @@ exports.update = (req, res, next) => {
       return document.save();
     })
     .then((result) => {
-      res.status(200).json(response(result, 'user.info.updatedSuccessfully', 0));
+      res.status(200).json(response(result, 'info.updatedSuccessfully', 0));
     })
     .catch((err) => {
-      handleErrors('user', err, res, { email_1: 'email' });
+      handleErrors( err, res, { email_1: 'email' });
     });
 
 };
@@ -65,9 +65,9 @@ exports.update = (req, res, next) => {
  */
 exports.findById = (req, res) => {
 
-  const id = { message: 'user.error.idIsInvalid' };
+  const id = { message: 'error.idIsInvalid' };
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-    handleErrors('user', new ValidationError('user.error.validationError', { id }), res);
+    handleErrors(new ValidationError('error.validationError', { id }), res);
     return null;
   }
 
@@ -76,10 +76,10 @@ exports.findById = (req, res) => {
       if (document === null) {
         throw new ResourceNotFoundError();
       }
-      res.status(200).json(response(document, 'user.info.foundSuccessfully', 0));
+      res.status(200).json(response(document, 'info.foundSuccessfully', 0));
     })
     .catch((err) => {
-      handleErrors('user', err, res, { email_1: 'email' });
+      handleErrors(err, res, { email_1: 'email' });
     });
 
 };
@@ -92,9 +92,9 @@ exports.findById = (req, res) => {
  */
 exports.deleteById = (req, res) => {
 
-  const id = { message: 'user.error.idIsInvalid' };
+  const id = { message: 'error.idIsInvalid' };
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-    handleErrors('user', new ValidationError('user.error.validationError', { id }), res);
+    handleErrors(new ValidationError('error.validationError', { id }), res);
     return null;
   }
 
@@ -103,10 +103,10 @@ exports.deleteById = (req, res) => {
       if (result.deletedCount === 0) {
         throw new ResourceNotFoundError();
       }
-      res.status(200).json(response({}, 'user.info.deletedSuccessfully', 0));
+      res.status(200).json(response({}, 'info.deletedSuccessfully', 0));
     })
     .catch((err) => {
-      handleErrors('user', err, res, { email_1: 'email' });
+      handleErrors(err, res, { email_1: 'email' });
     });
 
 };

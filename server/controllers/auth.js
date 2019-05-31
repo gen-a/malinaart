@@ -13,7 +13,6 @@ const { generatePassword } = require('../lib/password-generator');
 const { sendRegistrationLetter } = require('../letters/send-registration-letter');
 const { sendAccessLetter } = require('../letters/send-access-letter');
 
-
 /**
  * Add user to collection
  * @param req
@@ -22,22 +21,10 @@ const { sendAccessLetter } = require('../letters/send-access-letter');
  */
 exports.provideEmail = (req, res) => {
 
-  const email = { message: 'auth.error.emailIsRequired' };
-  if (!req.body.email) {
-    handleErrors('auth', new ValidationError('auth.error.validationError', { email }), res);
-    return null;
-  }
-
-  if (!validator.isEmail(req.body.email)) {
-    email.message = 'auth.error.emailIsInvalid';
-    handleErrors('auth', new ValidationError('auth.error.validationError', { email }), res);
-    return null;
-  }
-
   User.findOne({ email: req.body.email })
     .then((document) => {
       if (document !== null) {
-        res.status(200).json(response({ isNew: false }, 'auth.info.pleaseUsePasswordToEnter', 0));
+        res.status(200).json(response({ isNew: false }, 'info.pleaseUsePasswordToEnter', 0));
       } else {
         const password = generatePassword();
         const email = req.body.email;
@@ -46,12 +33,12 @@ exports.provideEmail = (req, res) => {
         return user.save()
           .then(() => sendRegistrationLetter(email, password))
           .then((info) => {
-            res.status(200).json(response({ isNew: true }, 'auth.info.pleaseCheckEmailToEnter', 0));
+            res.status(200).json(response({ isNew: true }, 'info.pleaseCheckEmailToEnter', 0));
           });
       }
     })
     .catch((err) => {
-      handleErrors('auth', err, res, {});
+      handleErrors(err, res, {});
     });
 };
 
@@ -62,11 +49,11 @@ exports.provideEmail = (req, res) => {
  * @param res
  * @returns {*}
  */
-exports.login = (req, res, next) => {
+exports.login = (req, res) => {
   passport.authenticate(
     'local',
     {
-      badRequestMessage: 'auth.error.missingCredentials',
+      badRequestMessage: 'error.missingCredentials',
       session: false
     },
     (err, user, info) => {
@@ -77,7 +64,7 @@ exports.login = (req, res, next) => {
       }
 
       if (!user) {
-        handleErrors('auth', new MissingCredentialsError(info.message, {}), res);
+        handleErrors(new MissingCredentialsError(info.message, {}), res);
         return null;
       }
 
@@ -106,12 +93,67 @@ exports.login = (req, res, next) => {
               expires,
               token: jwtToken,
               refreshToken: data.token
-            }, 'auth.info.loggedInSuccessfully', 0));
+            }, 'info.loggedInSuccessfully', 0));
           })
           .catch((err) => {
-            handleErrors('auth', err, res, {});
+            handleErrors(err, res, {});
           });
       });
-    })(req, res, next);
+    })(req, res);
   return null;
+};
+
+/**
+ * Add user to collection
+ * @param req
+ * @param res
+ * @returns {*}
+ */
+exports.refreshToken = (req, res) => {
+
+  const data = jwt.decode(req.body.token);
+  if(data===null || !data.payload.id){
+    handleErrors(new ValidationError('error.validationError', { token: { message: 'error.tokenIsInvalid' } }
+    ), res);
+    return null;
+  }
+
+  RefreshToken.findOne({
+    token: req.body.refreshToken,
+    userId: data.payload.id,
+    dateExpiration: { $gte: new Date() }
+  })
+    .then((document) => {
+      if (document === null) {
+        throw new ResourceNotFoundError();
+      }
+      User.findOne({ _id: new mongoose.Types.ObjectId(data.payload.id) })
+        .then((user) => {
+          if (user === null) {
+            throw new ResourceNotFoundError();
+          }
+          /** Convert user mongoose object. */
+          const payload = user.toJSON();
+          /** Get expiration date of token for client. */
+          const expires = new Date(Date.now() + jwt.expiresIn);
+          /** Sign JWT token with user payload. */
+          const jwtToken = jwt.sign(payload);
+          /** Create and store refresh token. */
+
+          document.save()
+            .then((data) => {
+              /** Send response with tokens data. */
+              res.status(200).json(response({
+                user: payload,
+                expires,
+                token: jwtToken,
+                refreshToken: data.token
+              }, 'info.tokenRefreshedSuccessfully', 0));
+            });
+
+        });
+    })
+    .catch((err) => {
+      handleErrors(err, res, {});
+    });
 };

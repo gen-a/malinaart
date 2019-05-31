@@ -18,32 +18,32 @@ const userSchema = mongoose.Schema({
   },
   email: {
     type: String,
-    required: [true, 'user.error.emailIsRequired'],
+    required: [true, 'error.emailIsRequired'],
     unique: true,
     validate: {
       validator:function(v) {
         return new Promise(function(resolve, reject) {
           validator.isEmail(v)
             ? resolve()
-            : reject('user.error.emailIsInvalid');
+            : reject('error.emailIsInvalid');
         });
       },
-      message: 'user.error.emailIsInvalid'
+      message: 'error.emailIsInvalid'
     }
   },
   password: {
     type: String,
-    required: [true, 'user.error.passwordIsRequired'],
-    minlength: [6, 'user.error.passwordToShort'],
-    maxlength: [12, 'user.error.passwordToLong'],
+    required: [true, 'error.passwordIsRequired'],
+    minlength: [6, 'error.passwordToShort'],
+    maxlength: [12, 'error.passwordToLong'],
     validate: {
       validator: (v) => v.match(/\s/) === null,
-      message: 'user.error.passwordNoSpaceAllowed'
+      message: 'error.passwordNoSpaceAllowed'
     }
   },
   role: {
     type: String,
-    required: [true, 'user.error.roleIsRequired'],
+    required: [true, 'error.roleIsRequired'],
     enum:['customer', 'admin', 'superadmin'],
     default:'customer'
   },
