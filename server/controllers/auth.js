@@ -1,12 +1,14 @@
-const { response } = require('../lib/response/response');
-const User = require('../models/user');
-const RefreshToken = require('../models/refreshToken');
 const mongoose = require('mongoose');
 const passport = require('passport');
 const validator = require('validator');
+const requestIp = require('request-ip');
+
+const { response } = require('../lib/response/response');
+const User = require('../models/user');
+const RefreshToken = require('../models/refreshToken');
 const jwt = require('../lib/jwt/index');
 const { handleErrors } = require('../lib/response/errors-to-response');
-const { ResourceNotFoundError, ValidationError } = require('../lib/errors');
+const { ResourceNotFoundError, ValidationError, MissingCredentialsError } = require('../lib/errors');
 const { generatePassword } = require('../lib/password-generator');
 const { sendRegistrationLetter } = require('../letters/send-registration-letter');
 const { sendAccessLetter } = require('../letters/send-access-letter');
@@ -75,24 +77,35 @@ exports.login = (req, res, next) => {
       }
 
       if (!user) {
-        handleErrors('auth', new ValidationError(info.message, {}), res);
+        handleErrors('auth', new MissingCredentialsError(info.message, {}), res);
         return null;
       }
 
-      req.logIn(user, {session: false}, (err) => {
+      req.logIn(user, { session: false }, (err) => {
         if (err) {
           res.status(400).json(response(err, '', 1));
           return null;
         }
+        /** Convert user mongoose object. */
         const payload = user.toJSON();
+        /** Get expiration date of token for client. */
+        const expires = new Date(Date.now() + jwt.expiresIn);
+        /** Sign JWT token with user payload. */
         const jwtToken = jwt.sign(payload);
-        const refreshToken = new RefreshToken({userId: user.id, _id: new mongoose.Types.ObjectId()});
+        /** Create and store refresh token. */
+        const refreshToken = new RefreshToken({
+          userId: user.id,
+          _id: new mongoose.Types.ObjectId(),
+          fingerprint: req.body.fingerprint || requestIp.getClientIp(req)
+        });
         refreshToken.save()
           .then((data) => {
+            /** Send response with tokens data. */
             res.status(200).json(response({
-              user:payload,
-              token:jwtToken,
-              refreshToken:data.token
+              user: payload,
+              expires,
+              token: jwtToken,
+              refreshToken: data.token
             }, 'auth.info.loggedInSuccessfully', 0));
           })
           .catch((err) => {
@@ -101,6 +114,4 @@ exports.login = (req, res, next) => {
       });
     })(req, res, next);
   return null;
-
-
 };

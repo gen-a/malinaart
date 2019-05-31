@@ -24,6 +24,50 @@ describe('/routes/auth.js API Integration Tests', function() {
       .catch(console.log);
   });
 
+  describe('POST /api/auth/login', () => {
+
+    it('Should fail if missing email or password', (done) => {
+      request(app)
+        .post('/api/auth/login')
+        .send({})
+        .end((err, res) => {
+          predict.response(res, 'auth.error.missingCredentials', 1, 422);
+          done();
+        });
+    });
+
+    it('Should fail if incorrect user name', (done) => {
+      request(app)
+        .post('/api/auth/login')
+        .send({email:`_${user.data.email}`, password:user.data.password})
+        .end((err, res) => {
+          predict.response(res, 'auth.error.incorrectUserName', 1, 422);
+          done();
+        });
+    });
+
+    it('Should fail if incorrect user password', (done) => {
+      request(app)
+        .post('/api/auth/login')
+        .send({email:user.data.email, password:`_${user.data.password}`})
+        .end((err, res) => {
+          predict.response(res, 'auth.error.incorrectPassword', 1, 422);
+          done();
+        });
+    });
+
+    it('Should succeed if correct credentials', (done) => {
+      request(app)
+        .post('/api/auth/login')
+        .send({...user.data})
+        .end((err, res) => {
+          predict.response(res, 'auth.info.loggedInSuccessfully', 0, 200);
+          done();
+        });
+    });
+
+  });
+
   describe('POST /api/auth/provide-email', () => {
 
     it('Should fail if missing email', (done) => {

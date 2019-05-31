@@ -6,6 +6,9 @@ const refreshTokenSchema = mongoose.Schema({
   token: {
     type: String
   },
+  fingerprint: {
+    type: String
+  },
   dateAdd: {
     type: Number
   },
@@ -31,15 +34,14 @@ refreshTokenSchema.options.toJSON = {
 
 function addToken(next) {
   const refreshToken = this;
-  if (!refreshToken.token) {
-    refreshToken.token = jwt.refreshToken();
-  }
+  refreshToken.token = jwt.refreshToken();
   next();
 }
 
+
 function addDateExpiration(next) {
   const refreshToken = this;
-  refreshToken.dateExpiration = new Date().getTime() + jwt.refreshTokenLimitTime;
+  refreshToken.dateExpiration = new Date().getTime() + jwt.refreshTokenExpiresIn;
   next();
 }
 

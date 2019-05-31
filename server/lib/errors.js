@@ -41,6 +41,12 @@ class ValidationError extends DomainError {
   }
 }
 
+class MissingCredentialsError extends DomainError {
+  constructor(message, error) {
+    super(message, error);
+  }
+}
+
 class DuplicateKeyError extends DomainError {
   constructor(message, key) {
     super(message);
@@ -54,4 +60,5 @@ module.exports = {
   InternalError,
   ValidationError,
   DuplicateKeyError,
+  MissingCredentialsError,
 };

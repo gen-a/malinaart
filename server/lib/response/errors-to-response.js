@@ -47,6 +47,10 @@ exports.handleErrors = (subject, err, res, indexMap = {}) => {
     res.status(404).json(response({}, `${subject}.error.resourceNotFoundError`, 1));
     return null;
   }
+  if(err.name && err.name === 'MissingCredentialsError'){
+    res.status(422).json(response({...err.data}, err.message, 1));
+    return null;
+  }
   if(err.name && err.name === 'ValidationError'){
     res.status(422).json(this.validatorErrorToResponse(subject, err));
     return null;

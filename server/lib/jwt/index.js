@@ -70,7 +70,10 @@ exports.decode = (token) => {
  * Public key
  */
 exports.publicKey = publicKey;
-
+/**
+ * Expire in
+ */
+exports.expiresIn =  ms(config.get('jwt.expiresIn'));
 /**
  * Refresh token
  */
@@ -79,4 +82,4 @@ exports.refreshToken = () => randToken.uid(256);
 /**
  * Refresh token limit time milliseconds
  */
-exports.refreshTokenLimitTime = ms(config.get('jwt.refreshKey.expiresIn'));
+exports.refreshTokenExpiresIn = ms(config.get('jwt.refreshKey.expiresIn'));

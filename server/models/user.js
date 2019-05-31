@@ -40,7 +40,13 @@ const userSchema = mongoose.Schema({
       validator: (v) => v.match(/\s/) === null,
       message: 'user.error.passwordNoSpaceAllowed'
     }
-  }
+  },
+  role: {
+    type: String,
+    required: [true, 'user.error.roleIsRequired'],
+    enum:['customer', 'admin', 'superadmin'],
+    default:'customer'
+  },
 });
 
 userSchema.options.toJSON = {
