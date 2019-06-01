@@ -8,11 +8,17 @@ const User = require('../models/user');
 const RefreshToken = require('../models/refreshToken');
 const jwt = require('../lib/jwt/index');
 const { handleErrors } = require('../lib/response/errors-to-response');
-const { ResourceNotFoundError, ValidationError, MissingCredentialsError } = require('../lib/errors');
+const { ResourceNotFoundError, ValidationError } = require('../lib/errors');
 const { generatePassword } = require('../lib/password-generator');
 const { sendRegistrationLetter } = require('../letters/send-registration-letter');
 const { sendAccessLetter } = require('../letters/send-access-letter');
 
+
+exports.resetPassword = (req, res) => {
+  res.status(200).json(response(req.user, 'pleaseUsePasswordToEnter', 0));
+  return null;
+
+};
 /**
  * Add user to collection
  * @param req
@@ -56,7 +62,7 @@ exports.retrieveToken = (req, res) => {
       badRequestMessage: 'error.missingCredentials',
       session: false
     },
-    (err, user, info) => {
+    (err, user) => {
 
       if (err) {
         handleErrors(err, res);
@@ -107,39 +113,37 @@ exports.retrieveToken = (req, res) => {
  * @returns {*}
  */
 exports.refreshToken = (req, res) => {
-
-  const data = jwt.decode(req.body.token);
-  if (data === null || !data.payload.id) {
-    handleErrors(new ValidationError('malformedRequest', { token: { message: 'tokenIsInvalid' } }
-    ), res);
-    return null;
-  }
-  const userId = data.payload.id;
-  RefreshToken.countDocuments({
-    userId,
+  /** Get refreshToken data by request */
+  RefreshToken.findOne({
+    token: req.body.refreshToken,
     expiresAt: { $gte: new Date() }
   })
-    .then((res) => {
-
-      const filter = res > jwt.refreshTokenUserLimit
-        ? { userId }
-        : { userId, expiresAt: { $lte: new Date() } };
-
-      return RefreshToken.deleteMany(filter);
-    })
-    .then(() => (
-      RefreshToken.findOne({
-        token: req.body.refreshToken,
-        userId,
-        expiresAt: { $gte: new Date() }
-      })
-    ))
     .then((document) => {
+      /** If no refreshToken found throw error */
       if (document === null) {
         throw new ResourceNotFoundError();
       }
-      User.findOne({ _id: new mongoose.Types.ObjectId(userId) })
+      /** Get user id from refreshToken */
+      const userId = document.userId;
+      /** Count refreshTokens to clear if more than limited by user */
+      RefreshToken.countDocuments({
+        userId,
+        expiresAt: { $gte: new Date() }
+      })
+        .then((res) => {
+          /** Set delete filter depending on by user limit */
+          const filter = res > jwt.refreshTokenUserLimit
+            ? { userId, token: { $not: req.body.refreshToken } }
+            : { userId, expiresAt: { $lte: new Date() } };
+          /** Clean up the tokens */
+          return RefreshToken.deleteMany(filter);
+        })
+        .then(() =>
+          /** Get User data */
+          User.findOne({ _id: new mongoose.Types.ObjectId(userId)})
+        )
         .then((user) => {
+          /** If no user found throw error */
           if (user === null) {
             throw new ResourceNotFoundError();
           }

@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const authController = require('../../controllers/auth');
 const { checkRequiredInBody } = require('../../lib/middlewares/check-required-in-body');
+const authorize = require('../../lib/middlewares/authorize');
 
 /** Sign In route. */
 router.post(
@@ -16,10 +17,18 @@ router.post(
   authController.retrieveToken
 );
 
+/** Reset password route. */
+router.post(
+  '/reset-password',
+  authorize(),
+  //checkRequiredInBody(['oldPassword', 'newPassword']),
+  authController.resetPassword
+);
+
 /** Refresh token. */
 router.post(
   '/refresh-token',
-  checkRequiredInBody(['token', 'refreshToken']),
+  checkRequiredInBody(['refreshToken']),
   authController.refreshToken
 );
 

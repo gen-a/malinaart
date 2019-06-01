@@ -1,7 +1,6 @@
 const fs = require('fs');
 const jwt = require('jsonwebtoken');
 const path = require('path');
-const expressJwt = require('express-jwt');
 const randToken = require('rand-token');
 const ms = require('ms');
 const config = require('../../config');
@@ -33,13 +32,13 @@ const verifyOptions = { ...signOptions, algorithm: [signOptions.algorithm] };
  * ex.:
  * axios.defaults.headers.common['Authorization'] = 'Bearer ' + JWT_TOKEN;
  */
-exports.jwtCheck = expressJwt({
-  secret: publicKey,
-  issuer: signOptions.issuer,
-  subject: signOptions.subject,
-  audience: signOptions.audience,
-});
-
+exports.extract = (header) =>{
+  try{
+    return this.verify(header.replace(/^Bearer /, ''));
+  }catch(e){
+    return null;
+  }
+};
 /**
  * Create new JWT token
  * @param payload {object}

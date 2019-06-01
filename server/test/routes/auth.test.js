@@ -84,23 +84,10 @@ describe('/routes/auth.js API Integration Tests', function() {
 
   describe('POST /api/auth/refresh-token', () => {
 
-    it('Should fail if missing token', (done) => {
-      request(app)
-        .post('/api/auth/refresh-token')
-        .send({ refreshToken: authData.refreshToken })
-        .end((err, res) => {
-          predict.response(res, 'missingRequiredParameters', 1, 422);
-          predict.failedParameters(res, {
-            token: 'missingValue'
-          });
-          done();
-        });
-    });
-
     it('Should fail if missing refreshToken', (done) => {
       request(app)
         .post('/api/auth/refresh-token')
-        .send({ token: authData.token })
+        .send({})
         .end((err, res) => {
           predict.response(res, 'missingRequiredParameters', 1, 422);
           predict.failedParameters(res, {
@@ -110,10 +97,10 @@ describe('/routes/auth.js API Integration Tests', function() {
         });
     });
 
-    it('Should succeed if correct token and refreshToken', (done) => {
+    it('Should succeed if correct refreshToken', (done) => {
       request(app)
         .post('/api/auth/refresh-token')
-        .send({ token: authData.token, refreshToken: authData.refreshToken })
+        .send({ refreshToken: authData.refreshToken })
         .end((err, res) => {
           predict.response(res, 'tokenRefreshedSuccessfully', 0, 200);
           done();
@@ -123,7 +110,7 @@ describe('/routes/auth.js API Integration Tests', function() {
     it('Should failed with invalid refreshToken', (done) => {
       request(app)
         .post('/api/auth/refresh-token')
-        .send({ token: authData.token, refreshToken: authData.refreshToken })
+        .send({ refreshToken: authData.refreshToken })
         .end((err, res) => {
           predict.response(res, 'resourceNotFound', 1, 404);
           done();

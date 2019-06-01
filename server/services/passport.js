@@ -1,21 +1,8 @@
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const User = require('../models/user');
-const passportJWT = require('passport-jwt');
-const JWTStrategy = passportJWT.Strategy;
-const ExtractJWT = passportJWT.ExtractJwt;
 const jwt = require('../lib/jwt/index');
 const { ValidationError } = require('../lib/errors');
-
-
-passport.use(new JWTStrategy({
-    jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
-    secretOrKey: jwt.publicKey
-  },
-  (payload, cb) => {
-    return cb(null, payload);
-  }
-));
 
 passport.use(new LocalStrategy(
   {
@@ -52,18 +39,6 @@ passport.use(new LocalStrategy(
       .catch(console.log);
   }
 ));
-
-passport.serializeUser((user, cb) => {
-  cb(null, user.id);
-});
-
-passport.deserializeUser((id, cb) => {
-  User.findById(id)
-    .then((user) => {
-      cb(null, user === null ? false : user.toJSON());
-    })
-    .catch(console.log);
-});
 
 module.exports = (server) => {
   server.use(passport.initialize());

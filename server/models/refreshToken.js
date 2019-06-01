@@ -14,7 +14,7 @@ const refreshTokenSchema = mongoose.Schema({
   },
   userId: {
     type: String,
-    required: [true, 'refreshToken.error.userIdIsRequired'],
+    required: [true, 'userIdIsRequired'],
   }
 });
 
