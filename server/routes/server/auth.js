@@ -11,9 +11,9 @@ router.post(
 
 /** Log In route. */
 router.post(
-  '/login',
+  '/retrieve-token',
   checkRequiredInBody(['email', 'password']),
-  authController.login
+  authController.retrieveToken
 );
 
 /** Refresh token. */

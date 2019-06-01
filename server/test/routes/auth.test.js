@@ -28,11 +28,11 @@ describe('/routes/auth.js API Integration Tests', function() {
 
   let ata;
 
-  describe('POST /api/auth/login', () => {
+  describe('POST /api/auth/retrieve-token', () => {
 
     it('Should fail if missing email or password', (done) => {
       request(app)
-        .post('/api/auth/login')
+        .post('/api/auth/retrieve-token')
         .send({})
         .end((err, res) => {
           predict.response(res, 'missingRequiredParameters', 1, 422);
@@ -46,7 +46,7 @@ describe('/routes/auth.js API Integration Tests', function() {
 
     it('Should fail if incorrect user name', (done) => {
       request(app)
-        .post('/api/auth/login')
+        .post('/api/auth/retrieve-token')
         .send({email:`_${user.data.email}`, password:user.data.password})
         .end((err, res) => {
           predict.response(res, 'malformedRequest', 1, 422);
@@ -59,7 +59,7 @@ describe('/routes/auth.js API Integration Tests', function() {
 
     it('Should fail if incorrect user password', (done) => {
       request(app)
-        .post('/api/auth/login')
+        .post('/api/auth/retrieve-token')
         .send({email:user.data.email, password:`_${user.data.password}`})
         .end((err, res) => {
           predict.response(res, 'malformedRequest', 1, 422);
@@ -72,7 +72,7 @@ describe('/routes/auth.js API Integration Tests', function() {
 
     it('Should succeed if correct credentials', (done) => {
       request(app)
-        .post('/api/auth/login')
+        .post('/api/auth/retrieve-token')
         .send({...user.data})
         .end((err, res) => {
             ata = res.body.data;

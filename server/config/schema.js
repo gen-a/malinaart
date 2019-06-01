@@ -149,9 +149,13 @@ module.exports = {
         doc: 'Refresh key expiration time limit in ms format',
         format: String,
         default: '30d'
-      }
+      },
+      userLimit:{
+        doc: 'Limit of refresh tokens for user',
+        format: Number,
+        default: 2
+      },
     }
-
   },
   app: {
     dataUrl: {

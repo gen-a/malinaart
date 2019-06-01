@@ -49,7 +49,7 @@ exports.provideEmail = (req, res) => {
  * @param res
  * @returns {*}
  */
-exports.login = (req, res) => {
+exports.retrieveToken = (req, res) => {
   passport.authenticate(
     'local',
     {
@@ -107,22 +107,36 @@ exports.login = (req, res) => {
 exports.refreshToken = (req, res) => {
 
   const data = jwt.decode(req.body.token);
-  if(data===null || !data.payload.id){
+  if (data === null || !data.payload.id) {
     handleErrors(new ValidationError('malformedRequest', { token: { message: 'error.tokenIsInvalid' } }
     ), res);
     return null;
   }
-
-  RefreshToken.findOne({
-    token: req.body.refreshToken,
-    userId: data.payload.id,
+  const userId = data.payload.id;
+  RefreshToken.countDocuments({
+    userId,
     dateExpiration: { $gte: new Date() }
   })
+    .then((res) => {
+
+      const filter = res > jwt.refreshTokenUserLimit
+        ? { userId }
+        : { userId, dateExpiration: { $lte: new Date() } };
+
+      return RefreshToken.deleteMany(filter);
+    })
+    .then(() => (
+      RefreshToken.findOne({
+        token: req.body.refreshToken,
+        userId,
+        dateExpiration: { $gte: new Date() }
+      })
+    ))
     .then((document) => {
       if (document === null) {
         throw new ResourceNotFoundError();
       }
-      User.findOne({ _id: new mongoose.Types.ObjectId(data.payload.id) })
+      User.findOne({ _id: new mongoose.Types.ObjectId(userId) })
         .then((user) => {
           if (user === null) {
             throw new ResourceNotFoundError();
