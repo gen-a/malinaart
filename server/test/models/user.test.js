@@ -27,10 +27,10 @@ describe('/models/user tests: ', function() {
       newUser.validate((err) => {
 
         expect(err.errors).to.have.property('password');
-        expect(err.errors.password.message).to.equal('error.passwordIsRequired');
+        expect(err.errors.password.message).to.equal('passwordIsRequired');
 
         expect(err.errors).to.have.property('email');
-        expect(err.errors.email.message).to.equal('error.emailIsRequired');
+        expect(err.errors.email.message).to.equal('emailIsRequired');
 
         done();
       });
@@ -42,7 +42,7 @@ describe('/models/user tests: ', function() {
       const newUser = new User({ ...user.data, email: '222' });
       newUser.validate((err) => {
         expect(err.errors).to.have.property('email');
-        expect(err.errors.email.reason).to.equal('error.emailIsInvalid');
+        expect(err.errors.email.reason).to.equal('emailIsInvalid');
         done();
       });
     });
@@ -51,7 +51,7 @@ describe('/models/user tests: ', function() {
       const newUser = new User({ ...user.data, password: '1' });
       newUser.validate((err) => {
         expect(err.errors).to.have.property('password');
-        expect(err.errors.password.message).to.equal('error.passwordToShort');
+        expect(err.errors.password.message).to.equal('passwordToShort');
         done();
       });
     });
@@ -60,7 +60,7 @@ describe('/models/user tests: ', function() {
       const newUser = new User({ ...user.data, password: '1111111111111111111111' });
       newUser.validate((err) => {
         expect(err.errors).to.have.property('password');
-        expect(err.errors.password.message).to.equal('error.passwordToLong');
+        expect(err.errors.password.message).to.equal('passwordToLong');
         done();
       });
     });
@@ -69,7 +69,7 @@ describe('/models/user tests: ', function() {
       const newUser = new User({ ...user.data, password: '11 1111' });
       newUser.validate((err) => {
         expect(err.errors).to.have.property('password');
-        expect(err.errors.password.message).to.equal('error.passwordNoSpaceAllowed');
+        expect(err.errors.password.message).to.equal('passwordNoSpaceAllowed');
         done();
       });
     });

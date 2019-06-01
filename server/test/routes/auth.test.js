@@ -8,6 +8,8 @@ const { exitIfNotTest } = require('../../lib/env-params');
 
 exitIfNotTest();
 
+
+
 describe('/routes/auth.js API Integration Tests', function() {
 
   /** Required timeout for executing async mongoose requests. */
@@ -33,9 +35,11 @@ describe('/routes/auth.js API Integration Tests', function() {
         .post('/api/auth/login')
         .send({})
         .end((err, res) => {
-          predict.response(res, 'error.missingRequiredParameters', 1, 422);
-          expect(res.body.data).to.have.property('failed');
-          expect(res.body.data.failed).to.eql(['email', 'password']);
+          predict.response(res, 'missingRequiredParameters', 1, 422);
+          predict.failedParameters(res, {
+            email: 'missingValue',
+            password: 'missingValue',
+          });
           done();
         });
     });
@@ -45,7 +49,10 @@ describe('/routes/auth.js API Integration Tests', function() {
         .post('/api/auth/login')
         .send({email:`_${user.data.email}`, password:user.data.password})
         .end((err, res) => {
-          predict.response(res, 'error.incorrectUserName', 1, 422);
+          predict.response(res, 'malformedRequest', 1, 422);
+          predict.failedParameters(res, {
+            email: 'incorrectUserName'
+          });
           done();
         });
     });
@@ -55,7 +62,10 @@ describe('/routes/auth.js API Integration Tests', function() {
         .post('/api/auth/login')
         .send({email:user.data.email, password:`_${user.data.password}`})
         .end((err, res) => {
-          predict.response(res, 'error.incorrectPassword', 1, 422);
+          predict.response(res, 'malformedRequest', 1, 422);
+          predict.failedParameters(res, {
+            password: 'incorrectPassword'
+          });
           done();
         });
     });
@@ -80,9 +90,10 @@ describe('/routes/auth.js API Integration Tests', function() {
         .post('/api/auth/refresh-token')
         .send({refreshToken:ata.refreshToken})
         .end((err, res) => {
-          predict.response(res, 'error.missingRequiredParameters', 1, 422);
-          expect(res.body.data).to.have.property('failed');
-          expect(res.body.data.failed).to.eql(['token']);
+          predict.response(res, 'missingRequiredParameters', 1, 422);
+          predict.failedParameters(res, {
+            token: 'missingValue'
+          });
           done();
         });
     });
@@ -92,9 +103,10 @@ describe('/routes/auth.js API Integration Tests', function() {
         .post('/api/auth/refresh-token')
         .send({token:ata.token})
         .end((err, res) => {
-          predict.response(res, 'error.missingRequiredParameters', 1, 422);
-          expect(res.body.data).to.have.property('failed');
-          expect(res.body.data.failed).to.eql(['refreshToken']);
+          predict.response(res, 'missingRequiredParameters', 1, 422);
+          predict.failedParameters(res, {
+            refreshToken: 'missingValue'
+          });
           done();
         });
     });
@@ -114,7 +126,7 @@ describe('/routes/auth.js API Integration Tests', function() {
         .post('/api/auth/refresh-token')
         .send({token:ata.token, refreshToken:ata.refreshToken})
         .end((err, res) => {
-          predict.response(res, 'error.resourceNotFoundError', 1, 404);
+          predict.response(res, 'resourceNotFound', 1, 404);
           done();
         });
     });
@@ -129,9 +141,10 @@ describe('/routes/auth.js API Integration Tests', function() {
         .post('/api/auth/provide-email')
         .send({})
         .end((err, res) => {
-          predict.response(res, 'error.missingRequiredParameters', 1, 422);
-          expect(res.body.data).to.have.property('failed');
-          expect(res.body.data.failed).to.eql(['email']);
+          predict.response(res, 'missingRequiredParameters', 1, 422);
+          predict.failedParameters(res, {
+            email: 'missingValue'
+          });
           done();
         });
     });
@@ -141,9 +154,10 @@ describe('/routes/auth.js API Integration Tests', function() {
         .post('/api/auth/provide-email')
         .send({ email: 'foo' })
         .end((err, res) => {
-          predict.response(res, 'error.validationError', 1, 422);
-          expect(res.body.data).to.have.property('email');
-          expect(res.body.data.email).to.equal('error.emailIsInvalid' );
+          predict.response(res, 'malformedRequest', 1, 422);
+          predict.failedParameters(res, {
+            email: 'emailIsInvalid'
+          });
           done();
         });
     });

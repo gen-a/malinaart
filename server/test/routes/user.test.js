@@ -41,19 +41,38 @@ describe('/routes/user.js API Integration Tests', function(){
         .post('/api/user')
         .send({...user.data})
         .end((err, res) => {
-          predict.response(res, 'error.duplicateKeyError', 1, 409);
-          expect(res.body.data).to.have.property('key');
-          expect(res.body.data.key).to.equal('email');
+          predict.response(res, 'duplicateUniqueKey', 1, 409);
+          predict.failedParameters(res, {
+            email: 'duplicateValue'
+          });
           done();
         });
     });
 
-    it('Should fail if missing or invalid password or email', (done) => {
+    it('Should fail if missing email and password', (done) => {
+      request(app)
+        .post('/api/user')
+        .send({})
+        .end((err, res) => {
+          predict.response(res, 'missingRequiredParameters', 1, 422);
+          predict.failedParameters(res, {
+            email: 'missingValue',
+            password: 'missingValue',
+          });
+          done();
+        });
+    });
+
+
+    it('Should fail if invalid email', (done) => {
           request(app)
         .post('/api/user')
-        .send({email: 'foo'})
+        .send({...user.data, email: 'foo'})
         .end((err, res) => {
-          predict.response(res, 'error.validationError', 1, 422);
+          predict.response(res, 'malformedRequest', 1, 422);
+          predict.failedParameters(res, {
+            email: 'emailIsInvalid'
+          });
           done();
         });
     });
@@ -66,7 +85,7 @@ describe('/routes/user.js API Integration Tests', function(){
       request(app)
         .get(`/api/user/${addedUserData.id}`)
         .end((err, res) => {
-          predict.response(res, 'info.foundSuccessfully', 0, 200);
+          predict.response(res, 'foundSuccessfully', 0, 200);
           done();
         });
     });
@@ -75,7 +94,10 @@ describe('/routes/user.js API Integration Tests', function(){
       request(app)
         .get(`/api/user/111`)
         .end((err, res) => {
-          predict.response(res, 'error.validationError', 1, 422);
+          predict.response(res, 'malformedRequest', 1, 422);
+          predict.failedParameters(res, {
+            id: 'userIdIsInvalid'
+          });
           done();
         });
     });
@@ -88,7 +110,10 @@ describe('/routes/user.js API Integration Tests', function(){
       request(app)
         .delete(`/api/user/111`)
         .end((err, res) => {
-          predict.response(res, 'error.validationError', 1, 422);
+          predict.response(res, 'malformedRequest', 1, 422);
+          predict.failedParameters(res, {
+            id: 'userIdIsInvalid'
+          });
           done();
         });
     });
@@ -97,7 +122,7 @@ describe('/routes/user.js API Integration Tests', function(){
       request(app)
         .delete(`/api/user/${addedUserData.id}`)
         .end((err, res) => {
-          predict.response(res, 'info.deletedSuccessfully', 0, 200);
+          predict.response(res, 'deletedSuccessfully', 0, 200);
           done();
         });
     });
@@ -106,7 +131,7 @@ describe('/routes/user.js API Integration Tests', function(){
       request(app)
         .delete(`/api/user/${addedUserData.id}`)
         .end((err, res) => {
-          predict.response(res, 'error.resourceNotFoundError', 1, 404);
+          predict.response(res, 'resourceNotFound', 1, 404);
           done();
         });
     });

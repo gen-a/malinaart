@@ -26,14 +26,12 @@ exports.add = (req, res ) => {
  * Add user to collection
  * @param req
  * @param res
- * @param next
  * @returns {*}
  */
-exports.update = (req, res, next) => {
+exports.update = (req, res) => {
 
-  const id = { message: 'error.idIsInvalid' };
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-    handleErrors(new ValidationError('error.validationError', { id }), res);
+    handleErrors(new ValidationError('malformedRequest', { id:{message:'userIdIsInvalid'} }), res);
     return;
   }
 
@@ -50,7 +48,7 @@ exports.update = (req, res, next) => {
       return document.save();
     })
     .then((result) => {
-      res.status(200).json(response(result, 'info.updatedSuccessfully', 0));
+      res.status(200).json(response(result, 'updatedSuccessfully', 0));
     })
     .catch((err) => {
       handleErrors( err, res, { email_1: 'email' });
@@ -65,10 +63,9 @@ exports.update = (req, res, next) => {
  */
 exports.findById = (req, res) => {
 
-  const id = { message: 'error.idIsInvalid' };
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-    handleErrors(new ValidationError('error.validationError', { id }), res);
-    return null;
+    handleErrors(new ValidationError('malformedRequest', { id:{message:'userIdIsInvalid'} }), res);
+    return;
   }
 
   User.findOne({ _id: new mongoose.Types.ObjectId(req.params.id) })
@@ -76,7 +73,7 @@ exports.findById = (req, res) => {
       if (document === null) {
         throw new ResourceNotFoundError();
       }
-      res.status(200).json(response(document, 'info.foundSuccessfully', 0));
+      res.status(200).json(response(document, 'foundSuccessfully', 0));
     })
     .catch((err) => {
       handleErrors(err, res, { email_1: 'email' });
@@ -92,10 +89,9 @@ exports.findById = (req, res) => {
  */
 exports.deleteById = (req, res) => {
 
-  const id = { message: 'error.idIsInvalid' };
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-    handleErrors(new ValidationError('error.validationError', { id }), res);
-    return null;
+    handleErrors(new ValidationError('malformedRequest', { id:{message:'userIdIsInvalid'} }), res);
+    return;
   }
 
   User.deleteOne({ _id: new mongoose.Types.ObjectId(req.params.id) })
@@ -103,7 +99,7 @@ exports.deleteById = (req, res) => {
       if (result.deletedCount === 0) {
         throw new ResourceNotFoundError();
       }
-      res.status(200).json(response({}, 'info.deletedSuccessfully', 0));
+      res.status(200).json(response({}, 'deletedSuccessfully', 0));
     })
     .catch((err) => {
       handleErrors(err, res, { email_1: 'email' });

@@ -5,6 +5,8 @@ const passportJWT = require('passport-jwt');
 const JWTStrategy = passportJWT.Strategy;
 const ExtractJWT = passportJWT.ExtractJwt;
 const jwt = require('../lib/jwt/index');
+const { ValidationError } = require('../lib/errors');
+
 
 passport.use(new JWTStrategy({
     jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
@@ -23,11 +25,27 @@ passport.use(new LocalStrategy(
   (username, password, done) => {
     User.findOne({ email: username })
       .then((user) => {
+
         if (!user) {
-          return done(null, false, { message: 'error.incorrectUserName' });
+          return done(
+            new ValidationError(
+              'malformedRequest',
+              { email: { message: 'incorrectUserName' } }
+            ),
+            false,
+            'error.incorrectUserName'
+          );
         }
         if (!user.comparePassword(password)) {
-          return done(null, false, { message: 'error.incorrectPassword' });
+          return done(
+            new ValidationError(
+              'malformedRequest',
+              { password: { message: 'incorrectPassword' } }
+            ),
+            false,
+            'error.incorrectPassword'
+          );
+
         }
         return done(null, user);
       })

@@ -17,13 +17,6 @@ class ResourceNotFoundError extends DomainError {
   }
 }
 
-class MissingRequiredParametersError extends DomainError {
-  constructor( message, keys ) {
-    super(`Missing required parameters: ${keys.join(', ')}.`);
-    this.data = { message, keys };
-  }
-}
-
 // I do something like this to wrap errors from other frameworks.
 // Correction thanks to @vamsee on Twitter:
 // https://twitter.com/lakamsani/status/1035042907890376707
@@ -41,12 +34,6 @@ class ValidationError extends DomainError {
   }
 }
 
-class MissingCredentialsError extends DomainError {
-  constructor(message, error) {
-    super(message, error);
-  }
-}
-
 class DuplicateKeyError extends DomainError {
   constructor(message, key) {
     super(message);
@@ -55,10 +42,8 @@ class DuplicateKeyError extends DomainError {
 }
 
 module.exports = {
-  MissingRequiredParametersError,
   ResourceNotFoundError,
   InternalError,
   ValidationError,
   DuplicateKeyError,
-  MissingCredentialsError,
 };

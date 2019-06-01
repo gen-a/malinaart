@@ -59,12 +59,7 @@ exports.login = (req, res) => {
     (err, user, info) => {
 
       if (err) {
-        res.status(400).json(response(err, '', 1));
-        return null;
-      }
-
-      if (!user) {
-        handleErrors(new MissingCredentialsError(info.message, {}), res);
+        handleErrors(err, res);
         return null;
       }
 
@@ -113,7 +108,7 @@ exports.refreshToken = (req, res) => {
 
   const data = jwt.decode(req.body.token);
   if(data===null || !data.payload.id){
-    handleErrors(new ValidationError('error.validationError', { token: { message: 'error.tokenIsInvalid' } }
+    handleErrors(new ValidationError('malformedRequest', { token: { message: 'error.tokenIsInvalid' } }
     ), res);
     return null;
   }
