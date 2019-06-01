@@ -88,3 +88,8 @@ exports.refreshTokenExpiresIn = ms(config.get('jwt.refreshKey.expiresIn'));
  * Refresh token limit by user id
  */
 exports.refreshTokenUserLimit = config.get('jwt.refreshKey.userLimit');
+
+/**
+ * Fingerprint
+ */
+exports.fingerprint = () => randToken.uid(256);

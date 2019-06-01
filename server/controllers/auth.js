@@ -76,9 +76,11 @@ exports.retrieveToken = (req, res) => {
         const jwtToken = jwt.sign(payload);
         /** Create and store refresh token. */
         const refreshToken = new RefreshToken({
-          userId: user.id,
           _id: new mongoose.Types.ObjectId(),
-          fingerprint: req.body.fingerprint || requestIp.getClientIp(req)
+          issuedAt: new Date().getTime(),
+          userId: user.id,
+          token: jwt.refreshToken(),
+          expiresAt: new Date().getTime() + jwt.refreshTokenExpiresIn
         });
         refreshToken.save()
           .then((data) => {
@@ -88,7 +90,7 @@ exports.retrieveToken = (req, res) => {
               expires,
               token: jwtToken,
               refreshToken: data.token
-            }, 'info.loggedInSuccessfully', 0));
+            }, 'tokenRetrievedSuccessfully', 0));
           })
           .catch((err) => {
             handleErrors(err, res, {});
@@ -108,20 +110,20 @@ exports.refreshToken = (req, res) => {
 
   const data = jwt.decode(req.body.token);
   if (data === null || !data.payload.id) {
-    handleErrors(new ValidationError('malformedRequest', { token: { message: 'error.tokenIsInvalid' } }
+    handleErrors(new ValidationError('malformedRequest', { token: { message: 'tokenIsInvalid' } }
     ), res);
     return null;
   }
   const userId = data.payload.id;
   RefreshToken.countDocuments({
     userId,
-    dateExpiration: { $gte: new Date() }
+    expiresAt: { $gte: new Date() }
   })
     .then((res) => {
 
       const filter = res > jwt.refreshTokenUserLimit
         ? { userId }
-        : { userId, dateExpiration: { $lte: new Date() } };
+        : { userId, expiresAt: { $lte: new Date() } };
 
       return RefreshToken.deleteMany(filter);
     })
@@ -129,7 +131,7 @@ exports.refreshToken = (req, res) => {
       RefreshToken.findOne({
         token: req.body.refreshToken,
         userId,
-        dateExpiration: { $gte: new Date() }
+        expiresAt: { $gte: new Date() }
       })
     ))
     .then((document) => {
@@ -144,20 +146,21 @@ exports.refreshToken = (req, res) => {
           /** Convert user mongoose object. */
           const payload = user.toJSON();
           /** Get expiration date of token for client. */
-          const expires = new Date(Date.now() + jwt.expiresIn);
+          const expiresAt = Date.now() + jwt.expiresIn;
           /** Sign JWT token with user payload. */
           const jwtToken = jwt.sign(payload);
           /** Create and store refresh token. */
-
+          document.token = jwt.refreshToken();
+          document.expiresAt = new Date().getTime() + jwt.refreshTokenExpiresIn;
           document.save()
             .then((data) => {
               /** Send response with tokens data. */
               res.status(200).json(response({
                 user: payload,
-                expires,
+                expiresAt,
                 token: jwtToken,
                 refreshToken: data.token
-              }, 'info.tokenRefreshedSuccessfully', 0));
+              }, 'tokenRefreshedSuccessfully', 0));
             });
 
         });

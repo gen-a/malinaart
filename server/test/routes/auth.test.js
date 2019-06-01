@@ -9,7 +9,6 @@ const { exitIfNotTest } = require('../../lib/env-params');
 exitIfNotTest();
 
 
-
 describe('/routes/auth.js API Integration Tests', function() {
 
   /** Required timeout for executing async mongoose requests. */
@@ -26,7 +25,7 @@ describe('/routes/auth.js API Integration Tests', function() {
       .catch(console.log);
   });
 
-  let ata;
+  let authData;
 
   describe('POST /api/auth/retrieve-token', () => {
 
@@ -47,7 +46,7 @@ describe('/routes/auth.js API Integration Tests', function() {
     it('Should fail if incorrect user name', (done) => {
       request(app)
         .post('/api/auth/retrieve-token')
-        .send({email:`_${user.data.email}`, password:user.data.password})
+        .send({ email: `_${user.data.email}`, password: user.data.password })
         .end((err, res) => {
           predict.response(res, 'malformedRequest', 1, 422);
           predict.failedParameters(res, {
@@ -60,7 +59,7 @@ describe('/routes/auth.js API Integration Tests', function() {
     it('Should fail if incorrect user password', (done) => {
       request(app)
         .post('/api/auth/retrieve-token')
-        .send({email:user.data.email, password:`_${user.data.password}`})
+        .send({ email: user.data.email, password: `_${user.data.password}` })
         .end((err, res) => {
           predict.response(res, 'malformedRequest', 1, 422);
           predict.failedParameters(res, {
@@ -73,10 +72,10 @@ describe('/routes/auth.js API Integration Tests', function() {
     it('Should succeed if correct credentials', (done) => {
       request(app)
         .post('/api/auth/retrieve-token')
-        .send({...user.data})
+        .send({ ...user.data })
         .end((err, res) => {
-            ata = res.body.data;
-            predict.response(res, 'info.loggedInSuccessfully', 0, 200);
+          authData = res.body.data;
+          predict.response(res, 'tokenRetrievedSuccessfully', 0, 200);
           done();
         });
     });
@@ -88,7 +87,7 @@ describe('/routes/auth.js API Integration Tests', function() {
     it('Should fail if missing token', (done) => {
       request(app)
         .post('/api/auth/refresh-token')
-        .send({refreshToken:ata.refreshToken})
+        .send({ refreshToken: authData.refreshToken })
         .end((err, res) => {
           predict.response(res, 'missingRequiredParameters', 1, 422);
           predict.failedParameters(res, {
@@ -101,7 +100,7 @@ describe('/routes/auth.js API Integration Tests', function() {
     it('Should fail if missing refreshToken', (done) => {
       request(app)
         .post('/api/auth/refresh-token')
-        .send({token:ata.token})
+        .send({ token: authData.token })
         .end((err, res) => {
           predict.response(res, 'missingRequiredParameters', 1, 422);
           predict.failedParameters(res, {
@@ -114,9 +113,9 @@ describe('/routes/auth.js API Integration Tests', function() {
     it('Should succeed if correct token and refreshToken', (done) => {
       request(app)
         .post('/api/auth/refresh-token')
-        .send({token:ata.token, refreshToken:ata.refreshToken})
+        .send({ token: authData.token, refreshToken: authData.refreshToken })
         .end((err, res) => {
-          predict.response(res, 'info.tokenRefreshedSuccessfully', 0, 200);
+          predict.response(res, 'tokenRefreshedSuccessfully', 0, 200);
           done();
         });
     });
@@ -124,7 +123,7 @@ describe('/routes/auth.js API Integration Tests', function() {
     it('Should failed with invalid refreshToken', (done) => {
       request(app)
         .post('/api/auth/refresh-token')
-        .send({token:ata.token, refreshToken:ata.refreshToken})
+        .send({ token: authData.token, refreshToken: authData.refreshToken })
         .end((err, res) => {
           predict.response(res, 'resourceNotFound', 1, 404);
           done();
