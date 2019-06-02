@@ -1,11 +1,11 @@
 const router = require('express').Router();
 const userController = require('../../controllers/user');
-const { checkRequiredInBody } = require('../../lib/middlewares/check-required-in-body');
-
+const checkRequired = require('../../lib/middlewares/check-required');
+console.log(checkRequired);
 /** Add user route. */
 router.post(
   '/',
-  checkRequiredInBody(['email', 'password']),
+  checkRequired(['email', 'password']),
   userController.add
 );
 /** Update user route. */

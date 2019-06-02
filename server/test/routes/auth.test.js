@@ -84,21 +84,20 @@ describe('/routes/auth.js API Integration Tests', function() {
 
   describe('POST /api/auth/refresh-token', () => {
 
-    it('Should fail if missing refreshToken and fingerprint', (done) => {
+    it('Should fail if missing refreshToken', (done) => {
       request(app)
         .post('/api/auth/refresh-token')
         .send({})
         .end((err, res) => {
           predict.response(res, 'missingRequiredParameters', 1, 422);
           predict.failedParameters(res, {
-            refreshToken: 'missingValue',
-            fingerprint: 'missingValue'
+            refreshToken: 'missingValue'
           });
           done();
         });
     });
 
-    it('Should succeed if correct refreshToken and fingerprint', (done) => {
+    it('Should succeed if correct refreshToken', (done) => {
       request(app)
         .post('/api/auth/refresh-token')
         .send({ refreshToken: authData.refreshToken, fingerprint: authData.fingerprint })

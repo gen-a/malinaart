@@ -6,7 +6,7 @@ const { response } = require('../response/response');
  * @param next
  * @returns {*}
  */
-exports.checkUserInRequest = (req, res, next) => {
+module.exports = (req, res, next) => {
   if(req.user){
     return next();
   }

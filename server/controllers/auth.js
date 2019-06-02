@@ -80,11 +80,9 @@ const sendJwtTokenResponse = (res, user, refreshToken) => {
 
   /** Send response with tokens data. */
   res.status(200).json(response({
-    user: payload,
     expires,
     token: jwtToken,
-    refreshToken: refreshToken.token,
-    fingerprint: refreshToken.fingerprint,
+    refreshToken: refreshToken.token
   }, 'tokenIssuedSuccessfully', 0));
 
 };
@@ -97,21 +95,26 @@ const sendJwtTokenResponse = (res, user, refreshToken) => {
  * @returns {*}
  */
 exports.retrieveToken = (req, res) => {
+  const fingerprint = req.fingerprint.hash;
 
   authenticate(req.body.email, req.body.password)
     .then((user) => {
-      /** Create and store refresh token. */
-      const refreshToken = new RefreshToken({
-        _id: new mongoose.Types.ObjectId(),
-        userId: user.id,
-        token: jwt.refreshToken(),
-        fingerprint: jwt.fingerprint(),
-        issuedAt: new Date().getTime(),
-        expiresAt: new Date().getTime() + jwt.refreshTokenExpiresIn,
-      });
-      refreshToken.save()
-        .then((data) => {
-          sendJwtTokenResponse(res, user, data);
+      /** remove all user + fingerprint tokens. */
+      RefreshToken.deleteMany({ userId: user.id, fingerprint })
+        .then(() => {
+          /** Create and store new refresh token. */
+          const refreshToken = new RefreshToken({
+            _id: new mongoose.Types.ObjectId(),
+            userId: user.id,
+            token: jwt.refreshToken(),
+            fingerprint: fingerprint,
+            issuedAt: new Date().getTime(),
+            expiresAt: new Date().getTime() + jwt.refreshTokenExpiresIn,
+          });
+          return refreshToken.save()
+            .then((data) => {
+              sendJwtTokenResponse(res, user, data);
+            })
         })
     })
     .catch((err) => {
@@ -127,18 +130,15 @@ exports.retrieveToken = (req, res) => {
  * @returns {*}
  */
 exports.refreshToken = (req, res) => {
-  const { refreshToken: token, fingerprint } = req.body;
+  const { refreshToken: token } = req.body;
+  const fingerprint = req.fingerprint.hash;
   const timeStamp = new Date().getTime();
   /** Get actual refreshToken data by request token and fingerprint */
   RefreshToken.findOne({ token, fingerprint, expiresAt: { $gte: timeStamp } })
     .then((document) => {
       if (document === null) {
-        /** Remove all documents with same token/fingerprint and outdated */
-        return RefreshToken.deleteMany({ $or: [{ fingerprint }, { token }] })
-          .then(() => {
-            /** If no refreshToken found throw error */
-            throw new ResourceNotFoundError();
-          });
+        /** If no refreshToken found throw error */
+        throw new ResourceNotFoundError();
       }
       /** Get user id from refreshToken */
       const userId = document.userId;
@@ -150,7 +150,7 @@ exports.refreshToken = (req, res) => {
             ? { _id: { $ne: new mongoose.Types.ObjectId(document.id) } }
             : { expiresAt: { $lte: timeStamp } };
           /** Clean up the tokens */
-          return RefreshToken.deleteMany({userId, ...filter});
+          return RefreshToken.deleteMany({ userId, ...filter });
         })
         .then(() =>
           /** Get User data */

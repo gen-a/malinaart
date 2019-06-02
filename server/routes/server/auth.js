@@ -1,19 +1,20 @@
 const router = require('express').Router();
 const authController = require('../../controllers/auth');
-const { checkRequiredInBody } = require('../../lib/middlewares/check-required-in-body');
+const checkRequired = require('../../lib/middlewares/check-required');
 const authorize = require('../../lib/middlewares/authorize');
-
+const fingerprint = require('../../lib/middlewares/fingerprint');
 /** Sign In route. */
 router.post(
   '/provide-email',
-  checkRequiredInBody(['email']),
+  checkRequired(['email']),
   authController.provideEmail
 );
 
 /** Log In route. */
 router.post(
   '/retrieve-token',
-  checkRequiredInBody(['email', 'password']),
+  fingerprint(),
+  checkRequired(['email', 'password']),
   authController.retrieveToken
 );
 
@@ -21,14 +22,15 @@ router.post(
 router.post(
   '/reset-password',
   authorize(),
-  //checkRequiredInBody(['oldPassword', 'newPassword']),
+  //checkRequired(['oldPassword', 'newPassword']),
   authController.resetPassword
 );
 
 /** Refresh token. */
 router.post(
   '/refresh-token',
-  checkRequiredInBody(['refreshToken', 'fingerprint']),
+  fingerprint(),
+  checkRequired(['refreshToken']),
   authController.refreshToken
 );
 

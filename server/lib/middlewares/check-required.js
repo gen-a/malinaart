@@ -3,7 +3,7 @@ const { response } = require('../response/response');
  *
  * @param keys
  */
-exports.checkRequiredInBody = (keys) => (req, res, next) => {
+module.exports = (keys) => (req, res, next) => {
   const errors = {};
   keys.forEach((k)=>{
     if(!req.body[k] || req.body[k] === ''){
