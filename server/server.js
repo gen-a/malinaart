@@ -8,7 +8,6 @@ const path = require('path');
 const flash = require('connect-flash');
 const FileStore = require('session-file-store')(session);
 
-const usePassport = require('./services/passport');
 const config = require('./config');
 const serverRoutes = require('./routes/server/index');
 const db = require('./services/db');
@@ -58,8 +57,6 @@ const app = function(nextHandler){
       httpOnly: true
     }
   }));
-
-  usePassport(server);
 
   /** Back-end */
   server.use('/api', serverRoutes);

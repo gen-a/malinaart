@@ -28,7 +28,7 @@ router.post(
 /** Refresh token. */
 router.post(
   '/refresh-token',
-  checkRequiredInBody(['refreshToken']),
+  checkRequiredInBody(['refreshToken', 'fingerprint']),
   authController.refreshToken
 );
 

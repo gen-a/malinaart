@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const passport = require('passport');
 const validator = require('validator');
 const requestIp = require('request-ip');
 
@@ -48,6 +47,48 @@ exports.provideEmail = (req, res) => {
     });
 };
 
+/**
+ * Authenticate user
+ * @param email {String}
+ * @param password {String}
+ * @return {Promise}
+ */
+const authenticate = (email, password) => (
+  User.findOne({ email })
+    .then((user) => {
+      if (user === null) {
+        throw new ValidationError('malformedRequest', { email: { message: 'incorrectUserName' } });
+      }
+      if (!user.comparePassword(password)) {
+        throw new ValidationError('malformedRequest', { password: { message: 'incorrectPassword' } });
+      }
+      return user;
+    })
+);
+
+
+const sendJwtTokenResponse = (res, user, refreshToken) => {
+
+  /** Convert user mongoose object. */
+  const { dateAdd, dateUpdate, ...payload } = user.toJSON();
+  /** Add refresh token id */
+  payload.refreshId = refreshToken.id;
+  /** Get expiration date of token for client. */
+  const expires = Date.now() + jwt.expiresIn;
+  /** Sign JWT token with user payload. */
+  const jwtToken = jwt.sign(payload);
+
+  /** Send response with tokens data. */
+  res.status(200).json(response({
+    user: payload,
+    expires,
+    token: jwtToken,
+    refreshToken: refreshToken.token,
+    fingerprint: refreshToken.fingerprint,
+  }, 'tokenIssuedSuccessfully', 0));
+
+};
+
 
 /**
  * Add user to collection
@@ -56,55 +97,28 @@ exports.provideEmail = (req, res) => {
  * @returns {*}
  */
 exports.retrieveToken = (req, res) => {
-  passport.authenticate(
-    'local',
-    {
-      badRequestMessage: 'error.missingCredentials',
-      session: false
-    },
-    (err, user) => {
 
-      if (err) {
-        handleErrors(err, res);
-        return null;
-      }
-
-      req.logIn(user, { session: false }, (err) => {
-        if (err) {
-          res.status(400).json(response(err, '', 1));
-          return null;
-        }
-        /** Convert user mongoose object. */
-        const payload = user.toJSON();
-        /** Get expiration date of token for client. */
-        const expires = new Date(Date.now() + jwt.expiresIn);
-        /** Sign JWT token with user payload. */
-        const jwtToken = jwt.sign(payload);
-        /** Create and store refresh token. */
-        const refreshToken = new RefreshToken({
-          _id: new mongoose.Types.ObjectId(),
-          issuedAt: new Date().getTime(),
-          userId: user.id,
-          token: jwt.refreshToken(),
-          expiresAt: new Date().getTime() + jwt.refreshTokenExpiresIn
-        });
-        refreshToken.save()
-          .then((data) => {
-            /** Send response with tokens data. */
-            res.status(200).json(response({
-              user: payload,
-              expires,
-              token: jwtToken,
-              refreshToken: data.token
-            }, 'tokenRetrievedSuccessfully', 0));
-          })
-          .catch((err) => {
-            handleErrors(err, res, {});
-          });
+  authenticate(req.body.email, req.body.password)
+    .then((user) => {
+      /** Create and store refresh token. */
+      const refreshToken = new RefreshToken({
+        _id: new mongoose.Types.ObjectId(),
+        userId: user.id,
+        token: jwt.refreshToken(),
+        fingerprint: jwt.fingerprint(),
+        issuedAt: new Date().getTime(),
+        expiresAt: new Date().getTime() + jwt.refreshTokenExpiresIn,
       });
-    })(req, res);
-  return null;
+      refreshToken.save()
+        .then((data) => {
+          sendJwtTokenResponse(res, user, data);
+        })
+    })
+    .catch((err) => {
+      handleErrors(err, res, {});
+    });
 };
+
 
 /**
  * Add user to collection
@@ -113,60 +127,47 @@ exports.retrieveToken = (req, res) => {
  * @returns {*}
  */
 exports.refreshToken = (req, res) => {
-  /** Get refreshToken data by request */
-  RefreshToken.findOne({
-    token: req.body.refreshToken,
-    expiresAt: { $gte: new Date() }
-  })
+  const { refreshToken: token, fingerprint } = req.body;
+  const timeStamp = new Date().getTime();
+  /** Get actual refreshToken data by request token and fingerprint */
+  RefreshToken.findOne({ token, fingerprint, expiresAt: { $gte: timeStamp } })
     .then((document) => {
-      /** If no refreshToken found throw error */
       if (document === null) {
-        throw new ResourceNotFoundError();
+        /** Remove all documents with same token/fingerprint and outdated */
+        return RefreshToken.deleteMany({ $or: [{ fingerprint }, { token }] })
+          .then(() => {
+            /** If no refreshToken found throw error */
+            throw new ResourceNotFoundError();
+          });
       }
       /** Get user id from refreshToken */
       const userId = document.userId;
       /** Count refreshTokens to clear if more than limited by user */
-      RefreshToken.countDocuments({
-        userId,
-        expiresAt: { $gte: new Date() }
-      })
+      RefreshToken.countDocuments({ userId, expiresAt: { $gte: timeStamp } })
         .then((res) => {
           /** Set delete filter depending on by user limit */
           const filter = res > jwt.refreshTokenUserLimit
-            ? { userId, token: { $not: req.body.refreshToken } }
-            : { userId, expiresAt: { $lte: new Date() } };
+            ? { _id: { $ne: new mongoose.Types.ObjectId(document.id) } }
+            : { expiresAt: { $lte: timeStamp } };
           /** Clean up the tokens */
-          return RefreshToken.deleteMany(filter);
+          return RefreshToken.deleteMany({userId, ...filter});
         })
         .then(() =>
           /** Get User data */
-          User.findOne({ _id: new mongoose.Types.ObjectId(userId)})
+          User.findOne({ _id: new mongoose.Types.ObjectId(userId) })
         )
         .then((user) => {
           /** If no user found throw error */
           if (user === null) {
             throw new ResourceNotFoundError();
           }
-          /** Convert user mongoose object. */
-          const payload = user.toJSON();
-          /** Get expiration date of token for client. */
-          const expiresAt = Date.now() + jwt.expiresIn;
-          /** Sign JWT token with user payload. */
-          const jwtToken = jwt.sign(payload);
           /** Create and store refresh token. */
           document.token = jwt.refreshToken();
-          document.expiresAt = new Date().getTime() + jwt.refreshTokenExpiresIn;
+          document.expiresAt = timeStamp + jwt.refreshTokenExpiresIn;
           document.save()
             .then((data) => {
-              /** Send response with tokens data. */
-              res.status(200).json(response({
-                user: payload,
-                expiresAt,
-                token: jwtToken,
-                refreshToken: data.token
-              }, 'tokenRefreshedSuccessfully', 0));
+              sendJwtTokenResponse(res, user, data);
             });
-
         });
     })
     .catch((err) => {

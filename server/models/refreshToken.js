@@ -6,6 +6,9 @@ const refreshTokenSchema = mongoose.Schema({
   token: {
     type: String
   },
+  fingerprint: {
+    type: String
+  },
   issuedAt: {
     type: Number
   },

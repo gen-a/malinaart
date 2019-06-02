@@ -75,7 +75,7 @@ describe('/routes/auth.js API Integration Tests', function() {
         .send({ ...user.data })
         .end((err, res) => {
           authData = res.body.data;
-          predict.response(res, 'tokenRetrievedSuccessfully', 0, 200);
+          predict.response(res, 'tokenIssuedSuccessfully', 0, 200);
           done();
         });
     });
@@ -84,25 +84,27 @@ describe('/routes/auth.js API Integration Tests', function() {
 
   describe('POST /api/auth/refresh-token', () => {
 
-    it('Should fail if missing refreshToken', (done) => {
+    it('Should fail if missing refreshToken and fingerprint', (done) => {
       request(app)
         .post('/api/auth/refresh-token')
         .send({})
         .end((err, res) => {
           predict.response(res, 'missingRequiredParameters', 1, 422);
           predict.failedParameters(res, {
-            refreshToken: 'missingValue'
+            refreshToken: 'missingValue',
+            fingerprint: 'missingValue'
           });
           done();
         });
     });
 
-    it('Should succeed if correct refreshToken', (done) => {
+    it('Should succeed if correct refreshToken and fingerprint', (done) => {
       request(app)
         .post('/api/auth/refresh-token')
-        .send({ refreshToken: authData.refreshToken })
+        .send({ refreshToken: authData.refreshToken, fingerprint: authData.fingerprint })
         .end((err, res) => {
-          predict.response(res, 'tokenRefreshedSuccessfully', 0, 200);
+          //authData = res.body.data;
+          predict.response(res, 'tokenIssuedSuccessfully', 0, 200);
           done();
         });
     });
@@ -110,7 +112,7 @@ describe('/routes/auth.js API Integration Tests', function() {
     it('Should failed with invalid refreshToken', (done) => {
       request(app)
         .post('/api/auth/refresh-token')
-        .send({ refreshToken: authData.refreshToken })
+        .send({ refreshToken: authData.refreshToken, fingerprint: authData.fingerprint })
         .end((err, res) => {
           predict.response(res, 'resourceNotFound', 1, 404);
           done();
