@@ -19,7 +19,7 @@ const { sendAccessLetter } = require('../letters/send-access-letter');
 
 
 exports.resetPassword = (req, res) => {
-  res.status(200).json(response(req.user, 'pleaseUsePasswordToEnter', 0));
+  res.status(200).json(response(req.user, 'authorizedSuccessfully', 0));
   return null;
 
 };

@@ -79,8 +79,38 @@ describe('/routes/auth.js API Integration Tests', function() {
           done();
         });
     });
+  });
+  describe('POST /api/auth/reset-password', () => {
+
+    it('Should be authorized for protected page', (done) => {
+      request(app)
+        .post('/api/auth/reset-password')
+        .set('Authorization', `Bearer ${authData.token}`)
+        .set('Accept', 'application/json')
+        .send()
+        .end((err, res) => {
+          //authData = res.body.data;
+          predict.response(res, 'authorizedSuccessfully', 0, 200);
+          done();
+        });
+    });
+
+    it('Should be failed with wrong or outdated token', (done) => {
+      request(app)
+        .post('/api/auth/reset-password')
+        .set('Authorization', `Bearer ${authData.token}xx`)
+        .set('Accept', 'application/json')
+        .send()
+        .end((err, res) => {
+          //authData = res.body.data;
+          predict.response(res, 'youHaveNotLoggedIn', 1, 401);
+          done();
+        });
+    });
 
   });
+
+
 
   describe('POST /api/auth/refresh-token', () => {
 

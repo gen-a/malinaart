@@ -35,7 +35,7 @@ const app = function(nextHandler){
 
   server.use(bodyParser.json());
   server.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
-  server.use(cookieParser());
+  server.use(cookieParser('secret'));
 
   server.use( session({
     store: new FileStore({
