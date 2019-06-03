@@ -18,10 +18,47 @@ const { sendRegistrationLetter } = require('../letters/send-registration-letter'
 const { sendAccessLetter } = require('../letters/send-access-letter');
 
 
+/**
+ * Reset password of registered user
+ * @param req
+ * @param res
+ * @returns {*}
+ */
 exports.resetPassword = (req, res) => {
-  res.status(200).json(response(req.user, 'authorizedSuccessfully', 0));
+  const { oldPassword, newPassword } = req.body;
+  User.findOne({ _id: new mongoose.Types.ObjectId(req.user.id) })
+    .then((user) => {
+      if (user === null) {
+        /** If no refreshToken found throw error */
+        throw new ResourceNotFoundError();
+      }
+      if (!user.comparePassword(oldPassword)) {
+          /** If no refreshToken found throw error */
+          throw new ValidationError('malformedRequest', { oldPassword: { message: 'isInvalid' } });
+      }
+      user.password = newPassword;
+      return user.save();
+    })
+    .then((user) =>
+      /** Remove all refresh tokens by user */
+      RefreshToken.deleteMany({ userId: user.id })
+    )
+    .then(() => {
+      res.status(200).json(response({}, 'savedSuccessfully', 0));
+    })
+    .catch((err) => {
+      handleErrors(err, res, {});
+    });
+};
+/**
+ * Show user data stored in token
+ * @param req
+ * @param res
+ * @returns {*}
+ */
+exports.profile = (req, res) => {
+  res.status(200).json(response(req.user, 'yourStoredData', 0));
   return null;
-
 };
 /**
  * Add user to collection

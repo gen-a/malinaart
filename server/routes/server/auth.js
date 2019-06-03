@@ -19,11 +19,10 @@ router.post(
 );
 
 /** Reset password route. */
-router.post(
-  '/reset-password',
+router.get(
+  '/profile',
   authorize(),
-  //checkRequired(['oldPassword', 'newPassword']),
-  authController.resetPassword
+  authController.profile
 );
 
 /** Refresh token. */
@@ -33,5 +32,11 @@ router.post(
   checkRequired(['refreshToken']),
   authController.refreshToken
 );
-
+/** Reset password. */
+router.put(
+  '/reset-password',
+  authorize(),
+  checkRequired(['newPassword', 'oldPassword']),
+  authController.resetPassword
+);
 module.exports = router;

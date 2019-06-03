@@ -80,26 +80,23 @@ describe('/routes/auth.js API Integration Tests', function() {
         });
     });
   });
-  describe('POST /api/auth/reset-password', () => {
+  describe('GET /api/auth/profile', () => {
 
     it('Should be authorized for protected page', (done) => {
       request(app)
-        .post('/api/auth/reset-password')
+        .get('/api/auth/profile')
         .set('Authorization', `Bearer ${authData.token}`)
-        .set('Accept', 'application/json')
         .send()
         .end((err, res) => {
-          //authData = res.body.data;
-          predict.response(res, 'authorizedSuccessfully', 0, 200);
+          predict.response(res, 'yourStoredData', 0, 200);
           done();
         });
     });
 
-    it('Should be failed with wrong or outdated token', (done) => {
+    it('Should be fail with wrong or outdated token', (done) => {
       request(app)
-        .post('/api/auth/reset-password')
+        .get('/api/auth/profile')
         .set('Authorization', `Bearer ${authData.token}xx`)
-        .set('Accept', 'application/json')
         .send()
         .end((err, res) => {
           //authData = res.body.data;
@@ -109,7 +106,82 @@ describe('/routes/auth.js API Integration Tests', function() {
     });
 
   });
+  describe('PUT /api/auth/reset-password', () => {
+    it('Should fail if missing oldPassword and newPassword', (done) => {
+      request(app)
+        .put('/api/auth/reset-password')
+        .set('Authorization', `Bearer ${authData.token}`)
+        .send()
+        .end((err, res) => {
+          predict.response(res, 'missingRequiredParameters', 1, 422);
+          predict.failedParameters(res, {
+            oldPassword: 'missingValue',
+            newPassword: 'missingValue'
+          });
+          done();
+        });
+    });
 
+    const newPassword = 'new1234567';
+
+    it('Should fail if oldPassword is incorrect', (done) => {
+      request(app)
+        .put('/api/auth/reset-password')
+        .set('Authorization', `Bearer ${authData.token}`)
+        .send({ oldPassword: 'foo', newPassword })
+        .end((err, res) => {
+          predict.response(res, 'malformedRequest', 1, 422);
+          predict.failedParameters(res, {
+            oldPassword: 'isInvalid'
+          });
+          done();
+        });
+    });
+
+    it('Should succeed if oldPassword is correct and new password is valid', (done) => {
+      request(app)
+        .put('/api/auth/reset-password')
+        .set('Authorization', `Bearer ${authData.token}`)
+        .send({ oldPassword: user.data.password, newPassword })
+        .end((err, res) => {
+          predict.response(res, 'savedSuccessfully', 0, 200);
+          done();
+        });
+    });
+
+    it('Should failed with valid but old refreshToken', (done) => {
+      request(app)
+        .post('/api/auth/refresh-token')
+        .send({ refreshToken: authData.refreshToken })
+        .end((err, res) => {
+          predict.response(res, 'resourceNotFound', 1, 404);
+          done();
+        });
+    });
+
+    it('Should succeed with new correct credentials', (done) => {
+      request(app)
+        .post('/api/auth/retrieve-token')
+        .send({ ...user.data, password: newPassword })
+        .end((err, res) => {
+          authData = res.body.data;
+          predict.response(res, 'tokenIssuedSuccessfully', 0, 200);
+          done();
+        });
+    });
+
+    it('Should be authorized for protected page', (done) => {
+      request(app)
+        .get('/api/auth/profile')
+        .set('Authorization', `Bearer ${authData.token}`)
+        .send()
+        .end((err, res) => {
+          predict.response(res, 'yourStoredData', 0, 200);
+          done();
+        });
+    });
+
+  });
 
 
   describe('POST /api/auth/refresh-token', () => {
