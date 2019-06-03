@@ -9,6 +9,9 @@ const refreshTokenSchema = mongoose.Schema({
   fingerprint: {
     type: String
   },
+  cookie: {
+    type: String
+  },
   issuedAt: {
     type: Number
   },

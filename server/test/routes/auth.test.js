@@ -100,7 +100,7 @@ describe('/routes/auth.js API Integration Tests', function() {
     it('Should succeed if correct refreshToken', (done) => {
       request(app)
         .post('/api/auth/refresh-token')
-        .send({ refreshToken: authData.refreshToken, fingerprint: authData.fingerprint })
+        .send({ refreshToken: authData.refreshToken })
         .end((err, res) => {
           //authData = res.body.data;
           predict.response(res, 'tokenIssuedSuccessfully', 0, 200);

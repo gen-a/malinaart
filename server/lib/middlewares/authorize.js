@@ -8,7 +8,6 @@ const jwt = require('../jwt/index');
 module.exports = (roles = []) => (req, res, next) => {
   const user = jwt.extract(req.headers['authorization']);
 
-
   if( user!== null ){
     if(roles.length === 0 || roles.includes(user.role) ){
       req.user = user;

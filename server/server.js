@@ -12,7 +12,7 @@ const config = require('./config');
 const serverRoutes = require('./routes/server/index');
 const db = require('./services/db');
 const PORT = config.get('server.port');
-
+const fingerprintCookie =  require('./lib/jwt/fingerprint-cookie');
 
 const app = function(nextHandler){
   const server = express();
@@ -57,6 +57,8 @@ const app = function(nextHandler){
       httpOnly: true
     }
   }));
+
+  server.use(fingerprintCookie.middleware);
 
   /** Back-end */
   server.use('/api', serverRoutes);

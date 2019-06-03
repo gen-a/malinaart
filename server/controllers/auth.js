@@ -5,7 +5,12 @@ const requestIp = require('request-ip');
 const { response } = require('../lib/response/response');
 const User = require('../models/user');
 const RefreshToken = require('../models/refreshToken');
+
 const jwt = require('../lib/jwt/index');
+const fingerprintCookie = require('../lib/jwt/fingerprint-cookie');
+const jwtRefresh = require('../lib/jwt/refresh');
+
+
 const { handleErrors } = require('../lib/response/errors-to-response');
 const { ResourceNotFoundError, ValidationError } = require('../lib/errors');
 const { generatePassword } = require('../lib/password-generator');
@@ -96,20 +101,22 @@ const sendJwtTokenResponse = (res, user, refreshToken) => {
  */
 exports.retrieveToken = (req, res) => {
   const fingerprint = req.fingerprint.hash;
+  const cookie = fingerprintCookie.read(req);
 
   authenticate(req.body.email, req.body.password)
     .then((user) => {
       /** remove all user + fingerprint tokens. */
-      RefreshToken.deleteMany({ userId: user.id, fingerprint })
+      RefreshToken.deleteMany({ userId: user.id, fingerprint, cookie })
         .then(() => {
           /** Create and store new refresh token. */
           const refreshToken = new RefreshToken({
             _id: new mongoose.Types.ObjectId(),
             userId: user.id,
-            token: jwt.refreshToken(),
+            token: jwtRefresh.token(),
+            cookie,
             fingerprint: fingerprint,
             issuedAt: new Date().getTime(),
-            expiresAt: new Date().getTime() + jwt.refreshTokenExpiresIn,
+            expiresAt: new Date().getTime() + jwtRefresh.expiresIn,
           });
           return refreshToken.save()
             .then((data) => {
@@ -134,41 +141,56 @@ exports.refreshToken = (req, res) => {
   const fingerprint = req.fingerprint.hash;
   const timeStamp = new Date().getTime();
   /** Get actual refreshToken data by request token and fingerprint */
-  RefreshToken.findOne({ token, fingerprint, expiresAt: { $gte: timeStamp } })
+  RefreshToken.findOne({ token, expiresAt: { $gte: timeStamp } })
     .then((document) => {
+
       if (document === null) {
         /** If no refreshToken found throw error */
         throw new ResourceNotFoundError();
       }
       /** Get user id from refreshToken */
       const userId = document.userId;
-      /** Count refreshTokens to clear if more than limited by user */
-      RefreshToken.countDocuments({ userId, expiresAt: { $gte: timeStamp } })
-        .then((res) => {
-          /** Set delete filter depending on by user limit */
-          const filter = res > jwt.refreshTokenUserLimit
-            ? { _id: { $ne: new mongoose.Types.ObjectId(document.id) } }
-            : { expiresAt: { $lte: timeStamp } };
-          /** Clean up the tokens */
-          return RefreshToken.deleteMany({ userId, ...filter });
+      /** Compare cookie */
+      const cookie = fingerprintCookie.read(req);
+
+      if (!fingerprintCookie.verify(req, document.cookie) || document.fingerprint !== fingerprint) {
+        return RefreshToken.deleteMany({
+          userId,
+          $or: [{ cookie }, { fingerprint }, { expiresAt: { $lte: timeStamp } }]
         })
-        .then(() =>
-          /** Get User data */
-          User.findOne({ _id: new mongoose.Types.ObjectId(userId) })
-        )
-        .then((user) => {
-          /** If no user found throw error */
-          if (user === null) {
+          .then(() => {
+            /** Throw error */
             throw new ResourceNotFoundError();
-          }
-          /** Create and store refresh token. */
-          document.token = jwt.refreshToken();
-          document.expiresAt = timeStamp + jwt.refreshTokenExpiresIn;
-          document.save()
-            .then((data) => {
-              sendJwtTokenResponse(res, user, data);
-            });
-        });
+          });
+      } else {
+        /** Count refreshTokens to clear if more than limited by user */
+        return RefreshToken.countDocuments({ userId, expiresAt: { $gte: timeStamp } })
+          .then((res) => {
+            /** Set delete filter depending on by user limit */
+            const filter = res > jwtRefresh.userLimit
+              ? { _id: { $ne: new mongoose.Types.ObjectId(document.id) } }
+              : { expiresAt: { $lte: timeStamp } };
+            /** Clean up the tokens */
+            return RefreshToken.deleteMany({ userId, ...filter });
+          })
+          .then(() =>
+            /** Get User data */
+            User.findOne({ _id: new mongoose.Types.ObjectId(userId) })
+          )
+          .then((user) => {
+            /** If no user found throw error */
+            if (user === null) {
+              throw new ResourceNotFoundError();
+            }
+            /** Create and store refresh token. */
+            document.token = jwtRefresh.token();
+            document.expiresAt = jwtRefresh.expiresIn;
+            document.save()
+              .then((data) => {
+                sendJwtTokenResponse(res, user, data);
+              });
+          });
+      }
     })
     .catch((err) => {
       handleErrors(err, res, {});
