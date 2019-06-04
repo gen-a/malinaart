@@ -2,5 +2,8 @@
   "verbose": true,
   "ignore": ["node_modules", ".next"],
   "watch": ["server/**/*", "server.js"],
-  "ext": "js json"
+  "ext": "js json",
+  "env": {
+    "NODE_ENV": "development"
+  }
 }

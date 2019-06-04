@@ -2,7 +2,6 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const requestIp = require('request-ip');
 
-const { response } = require('../lib/response/response');
 const User = require('../models/user');
 const RefreshToken = require('../models/refreshToken');
 
@@ -10,13 +9,15 @@ const jwt = require('../lib/jwt/index');
 const fingerprintCookie = require('../lib/jwt/fingerprint-cookie');
 const jwtRefresh = require('../lib/jwt/refresh');
 
+const ms = require('ms');
+const config = require('../config');
 
+const { response } = require('../lib/response/response');
 const { handleErrors } = require('../lib/response/errors-to-response');
 const { ResourceNotFoundError, ValidationError } = require('../lib/errors');
 const { generatePassword } = require('../lib/password-generator');
 const { sendRegistrationLetter } = require('../letters/send-registration-letter');
 const { sendAccessLetter } = require('../letters/send-access-letter');
-
 
 /**
  * Reset password of registered user
@@ -33,8 +34,8 @@ exports.resetPassword = (req, res) => {
         throw new ResourceNotFoundError();
       }
       if (!user.comparePassword(oldPassword)) {
-          /** If no refreshToken found throw error */
-          throw new ValidationError('malformedRequest', { oldPassword: { message: 'isInvalid' } });
+        /** If no refreshToken found throw error */
+        throw new ValidationError('malformedRequest', { oldPassword: { message: 'isInvalid' } });
       }
       user.password = newPassword;
       return user.save();
@@ -67,21 +68,33 @@ exports.profile = (req, res) => {
  * @returns {*}
  */
 exports.provideEmail = (req, res) => {
+  const waitingTime = ms(config.get('auth.confirmWaitingTime'));
 
-  User.findOne({ email: req.body.email })
-    .then((document) => {
-      if (document !== null) {
-        res.status(200).json(response({ isNew: false }, 'info.pleaseUsePasswordToEnter', 0));
-      } else {
-        const password = generatePassword();
+  const schema = User.schema.tree;
+  const role = schema.role.default;
+
+  User.deleteMany({ role, dateAdd: { $lte: new Date().getTime() - waitingTime } })
+    .then(() => User.findOne({ email: req.body.email }))
+    .then((user) => {
+      if (user === null) {
+        const password = generatePassword(
+          schema.password.minlength[0],
+          schema.password.maxlength[0]
+        );
         const email = req.body.email;
 
-        const user = new User({ email, password, _id: new mongoose.Types.ObjectId() });
+        user = new User({ email, password, _id: new mongoose.Types.ObjectId() });
         return user.save()
           .then(() => sendRegistrationLetter(email, password))
           .then((info) => {
             res.status(200).json(response({ isNew: true }, 'info.pleaseCheckEmailToEnter', 0));
           });
+      } else {
+        if (user.role !== '') {
+          res.status(200).json(response({ isNew: false }, 'info.pleaseUsePasswordToEnter', 0));
+        } else {
+          res.status(200).json(response({ isNew: true }, 'info.pleaseCheckEmailToEnter', 0));
+        }
       }
     })
     .catch((err) => {
@@ -104,7 +117,14 @@ const authenticate = (email, password) => (
       if (!user.comparePassword(password)) {
         throw new ValidationError('malformedRequest', { password: { message: 'incorrectPassword' } });
       }
-      return user;
+      const role = User.schema.tree.role;
+
+      if (user.role === role.default) {
+        return User.updateOne({ email }, { $set: {role: role.enum[1]} })
+          .then(() => user);
+      } else {
+        return user;
+      }
     })
 );
 

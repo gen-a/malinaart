@@ -1,4 +1,4 @@
-exports.generatePassword = function(){
+exports.generatePassword = function(min = 6, max = 12){
   const length = 8;
   const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let retVal = '';

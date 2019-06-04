@@ -6,8 +6,7 @@
   "corsOrigin": "http://127.0.0.1:3001,http://localhost:3001",
   "mail": {
     "host": "smtp.ethereal.email",
-    "port": 587,
-    "user": "vivian.dooley57@ethereal.email"
+    "port": 587
   },
   "app": {
     "dataUrl": "https://48ukraine.com",

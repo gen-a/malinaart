@@ -13,7 +13,7 @@ exports.connect = db.connect;
  */
 exports.data = {
   password: '198yuiRTY',
-  email: 'uniqueemail@gmail.com'
+  email: 'mallory25@ethereal.email'
 };
 /**
  * Create temporary user

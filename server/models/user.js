@@ -2,8 +2,12 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
 
+
 const userSchema = mongoose.Schema({
-  _id: mongoose.Types.ObjectId,
+  _id:{
+    type: mongoose.Types.ObjectId,
+    auto: true
+  },
   dateAdd: {
     type: Number
   },
@@ -34,8 +38,8 @@ const userSchema = mongoose.Schema({
   password: {
     type: String,
     required: [true, 'passwordIsRequired'],
-    minlength: [6, 'passwordToShort'],
-    maxlength: [12, 'passwordToLong'],
+    minlength: [6, 'passwordTooShort'],
+    maxlength: [12, 'passwordTooLong'],
     validate: {
       validator: (v) => v.match(/\s/) === null,
       message: 'passwordNoSpaceAllowed'
@@ -43,9 +47,8 @@ const userSchema = mongoose.Schema({
   },
   role: {
     type: String,
-    required: [true, 'roleIsRequired'],
-    enum:['customer', 'admin', 'superadmin'],
-    default:'customer'
+    enum: ['---', 'customer', 'admin', 'superadmin'],
+    default: '---'
   },
 });
 

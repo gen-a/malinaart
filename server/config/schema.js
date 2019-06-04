@@ -7,6 +7,9 @@ const params = [
   'DB_MONGO_URL',
   'DB_MONGO_URL__TEST',
   'SESSION_SECRET_KEY',
+  'MAIL_USER',
+  'MAIL_USER__DEV',
+  'MAIL_USER__TEST',
   'MAIL_PASS',
   'MAIL_PASS__DEV',
   'MAIL_PASS__TEST',
@@ -30,7 +33,7 @@ if (suffixes.hasOwnProperty(process.env.NODE_ENV)) {
 
 /** Destructurization of process.env for using in schema. */
 const {
-  DB_MONGO_URL, SESSION_SECRET_KEY, MAIL_PASS, JWT_PRIVATE_KEY, JWT_PUBLIC_KEY
+  DB_MONGO_URL, SESSION_SECRET_KEY, MAIL_USER, MAIL_PASS, JWT_PRIVATE_KEY, JWT_PUBLIC_KEY
 } = process.env;
 
 /** Export schema. */
@@ -98,7 +101,7 @@ module.exports = {
     user: {
       doc: 'Mail user.',
       format: 'email',
-      default: 'update.48ukraine.com@gmail.com',
+      default: MAIL_PASS,
       env: 'MAIL_USER'
     },
     pass: {
@@ -155,6 +158,13 @@ module.exports = {
         format: Number,
         default: 2
       },
+    }
+  },
+  auth:{
+    confirmWaitingTime:{
+      doc: 'Time gap between email providing and retrieve token',
+      format: String,
+      default: '15m'
     }
   },
   app: {

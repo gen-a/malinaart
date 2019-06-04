@@ -51,7 +51,7 @@ describe('/models/user tests: ', function() {
       const newUser = new User({ ...user.data, password: '1' });
       newUser.validate((err) => {
         expect(err.errors).to.have.property('password');
-        expect(err.errors.password.message).to.equal('passwordToShort');
+        expect(err.errors.password.message).to.equal('passwordTooShort');
         done();
       });
     });
@@ -60,7 +60,7 @@ describe('/models/user tests: ', function() {
       const newUser = new User({ ...user.data, password: '1111111111111111111111' });
       newUser.validate((err) => {
         expect(err.errors).to.have.property('password');
-        expect(err.errors.password.message).to.equal('passwordToLong');
+        expect(err.errors.password.message).to.equal('passwordTooLong');
         done();
       });
     });
