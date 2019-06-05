@@ -27,11 +27,11 @@ describe('/routes/auth.js API Integration Tests', function() {
 
   let authData;
 
-  describe('POST /api/auth/retrieve-token', () => {
+  describe('POST /api/auth/grant-access', () => {
 
     it('Should fail if missing email or password', (done) => {
       request(app)
-        .post('/api/auth/retrieve-token')
+        .post('/api/auth/grant-access')
         .send({})
         .end((err, res) => {
           predict.response(res, 'missingRequiredParameters', 1, 422);
@@ -45,20 +45,17 @@ describe('/routes/auth.js API Integration Tests', function() {
 
     it('Should fail if incorrect user name', (done) => {
       request(app)
-        .post('/api/auth/retrieve-token')
+        .post('/api/auth/grant-access')
         .send({ email: `_${user.data.email}`, password: user.data.password })
         .end((err, res) => {
-          predict.response(res, 'malformedRequest', 1, 422);
-          predict.failedParameters(res, {
-            email: 'incorrectUserName'
-          });
+          predict.response(res, 'userDocumentNotFound', 1, 404);
           done();
         });
     });
 
     it('Should fail if incorrect user password', (done) => {
       request(app)
-        .post('/api/auth/retrieve-token')
+        .post('/api/auth/grant-access')
         .send({ email: user.data.email, password: `_${user.data.password}` })
         .end((err, res) => {
           predict.response(res, 'malformedRequest', 1, 422);
@@ -71,7 +68,7 @@ describe('/routes/auth.js API Integration Tests', function() {
 
     it('Should succeed if correct credentials', (done) => {
       request(app)
-        .post('/api/auth/retrieve-token')
+        .post('/api/auth/grant-access')
         .send({ ...user.data })
         .end((err, res) => {
           authData = res.body.data;
@@ -106,10 +103,10 @@ describe('/routes/auth.js API Integration Tests', function() {
     });
 
   });
-  describe('PUT /api/auth/reset-password', () => {
+  describe('PUT /api/auth/password', () => {
     it('Should fail if missing oldPassword and newPassword', (done) => {
       request(app)
-        .put('/api/auth/reset-password')
+        .put('/api/auth/password')
         .set('Authorization', `Bearer ${authData.token}`)
         .send()
         .end((err, res) => {
@@ -126,7 +123,7 @@ describe('/routes/auth.js API Integration Tests', function() {
 
     it('Should fail if oldPassword is incorrect', (done) => {
       request(app)
-        .put('/api/auth/reset-password')
+        .put('/api/auth/password')
         .set('Authorization', `Bearer ${authData.token}`)
         .send({ oldPassword: 'foo', newPassword })
         .end((err, res) => {
@@ -140,7 +137,7 @@ describe('/routes/auth.js API Integration Tests', function() {
 
     it('Should succeed if oldPassword is correct and new password is valid', (done) => {
       request(app)
-        .put('/api/auth/reset-password')
+        .put('/api/auth/password')
         .set('Authorization', `Bearer ${authData.token}`)
         .send({ oldPassword: user.data.password, newPassword })
         .end((err, res) => {
@@ -149,19 +146,19 @@ describe('/routes/auth.js API Integration Tests', function() {
         });
     });
 
-    it('Should failed with valid but old refreshToken', (done) => {
+    it('Should fail with valid but old refreshToken', (done) => {
       request(app)
-        .post('/api/auth/refresh-token')
+        .post('/api/auth/refresh-access')
         .send({ refreshToken: authData.refreshToken })
         .end((err, res) => {
-          predict.response(res, 'resourceNotFound', 1, 404);
+          predict.response(res, 'refreshTokenDocumentNotFound', 1, 404);
           done();
         });
     });
 
     it('Should succeed with new correct credentials', (done) => {
       request(app)
-        .post('/api/auth/retrieve-token')
+        .post('/api/auth/grant-access')
         .send({ ...user.data, password: newPassword })
         .end((err, res) => {
           authData = res.body.data;
@@ -184,11 +181,11 @@ describe('/routes/auth.js API Integration Tests', function() {
   });
 
 
-  describe('POST /api/auth/refresh-token', () => {
+  describe('POST /api/auth/refresh-access', () => {
 
     it('Should fail if missing refreshToken', (done) => {
       request(app)
-        .post('/api/auth/refresh-token')
+        .post('/api/auth/refresh-access')
         .send({})
         .end((err, res) => {
           predict.response(res, 'missingRequiredParameters', 1, 422);
@@ -201,7 +198,7 @@ describe('/routes/auth.js API Integration Tests', function() {
 
     it('Should succeed if correct refreshToken', (done) => {
       request(app)
-        .post('/api/auth/refresh-token')
+        .post('/api/auth/refresh-access')
         .send({ refreshToken: authData.refreshToken })
         .end((err, res) => {
           //authData = res.body.data;
@@ -210,12 +207,12 @@ describe('/routes/auth.js API Integration Tests', function() {
         });
     });
 
-    it('Should failed with invalid refreshToken', (done) => {
+    it('Should fail with invalid refreshToken', (done) => {
       request(app)
-        .post('/api/auth/refresh-token')
+        .post('/api/auth/refresh-access')
         .send({ refreshToken: authData.refreshToken, fingerprint: authData.fingerprint })
         .end((err, res) => {
-          predict.response(res, 'resourceNotFound', 1, 404);
+          predict.response(res, 'refreshTokenDocumentNotFound', 1, 404);
           done();
         });
     });
@@ -223,11 +220,11 @@ describe('/routes/auth.js API Integration Tests', function() {
   });
 
 
-  describe('POST /api/auth/provide-email', () => {
+  describe('POST /api/auth/sign', () => {
 
     it('Should fail if missing email', (done) => {
       request(app)
-        .post('/api/auth/provide-email')
+        .post('/api/auth/sign')
         .send({})
         .end((err, res) => {
           predict.response(res, 'missingRequiredParameters', 1, 422);
@@ -240,7 +237,7 @@ describe('/routes/auth.js API Integration Tests', function() {
 
     it('Should fail if invalid email', (done) => {
       request(app)
-        .post('/api/auth/provide-email')
+        .post('/api/auth/sign')
         .send({ email: 'foo' })
         .end((err, res) => {
           predict.response(res, 'malformedRequest', 1, 422);
@@ -253,10 +250,10 @@ describe('/routes/auth.js API Integration Tests', function() {
 
     it('Should succeed with registered email', (done) => {
       request(app)
-        .post('/api/auth/provide-email')
+        .post('/api/auth/sign')
         .send({ email: user.data.email })
         .end((err, res) => {
-          predict.response(res, 'info.pleaseUsePasswordToEnter', 0, 200);
+          predict.response(res, 'pleaseUsePasswordToEnter', 0, 200);
           user.remove()
             .then(() => {
               done()
@@ -266,10 +263,10 @@ describe('/routes/auth.js API Integration Tests', function() {
 
     it('Should succeed with unregistered email', (done) => {
       request(app)
-        .post('/api/auth/provide-email')
+        .post('/api/auth/sign')
         .send({ email: user.data.email })
         .end((err, res) => {
-          predict.response(res, 'info.pleaseCheckEmailToEnter', 0, 200);
+          predict.response(res, 'pleaseCheckEmailToEnter', 0, 200);
           done();
         });
     });

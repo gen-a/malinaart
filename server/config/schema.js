@@ -165,7 +165,14 @@ module.exports = {
       doc: 'Time gap between email providing and retrieve token',
       format: String,
       default: '15m'
-    }
+    },
+    accessTokenExpiresIn:{
+      doc: 'Life time of the access token',
+      format: String,
+      default: '15m'
+    },
+
+
   },
   app: {
     dataUrl: {

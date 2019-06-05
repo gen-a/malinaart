@@ -45,6 +45,10 @@ exports.duplicateKeyErrorToResponse = (src, indexMap) => {
  */
 exports.handleErrors = (err, res, indexMap = {}) => {
   const errors = {};
+  if (err.name && err.name === 'DocumentNotFoundError') {
+    res.status(404).json(response({}, err.message || 'documentNotFound', 1));
+    return null;
+  }
   if (err.name && err.name === 'ResourceNotFoundError') {
     res.status(404).json(response({}, 'resourceNotFound', 1));
     return null;

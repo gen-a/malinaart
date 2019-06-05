@@ -14,7 +14,7 @@ router.get('/', (req, res) => {
 });
 
 router.use('*', (req, res) => {
-  handleErrors('api', new ResourceNotFoundError(), res, {});
+  handleErrors(new ResourceNotFoundError(), res,  {});
 });
 
 module.exports = router;

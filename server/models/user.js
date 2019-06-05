@@ -14,12 +14,6 @@ const userSchema = mongoose.Schema({
   dateUpdate: {
     type: Number
   },
-  visa: {
-    type: String
-  },
-  visaExpirationDate: {
-    type: Number
-  },
   email: {
     type: String,
     required: [true, 'emailIsRequired'],

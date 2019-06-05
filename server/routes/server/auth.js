@@ -3,19 +3,20 @@ const authController = require('../../controllers/auth');
 const checkRequired = require('../../lib/middlewares/check-required');
 const authorize = require('../../lib/middlewares/authorize');
 const fingerprint = require('../../lib/middlewares/fingerprint');
-/** Sign In route. */
+
+/** Sign In/Up route. */
 router.post(
-  '/provide-email',
+  '/sign',
   checkRequired(['email']),
-  authController.provideEmail
+  authController.sign
 );
 
 /** Log In route. */
 router.post(
-  '/retrieve-token',
+  '/grant-access',
   fingerprint(),
   checkRequired(['email', 'password']),
-  authController.retrieveToken
+  authController.grantAccess
 );
 
 /** Reset password route. */
@@ -27,16 +28,33 @@ router.get(
 
 /** Refresh token. */
 router.post(
-  '/refresh-token',
+  '/refresh-access',
   fingerprint(),
   checkRequired(['refreshToken']),
-  authController.refreshToken
+  authController.refreshAccess
 );
-/** Reset password. */
+
+/** Change password. */
 router.put(
-  '/reset-password',
+  '/password',
   authorize(),
   checkRequired(['newPassword', 'oldPassword']),
-  authController.resetPassword
+  authController.changePassword
 );
+
+/** Restore forgotten password. Ask for restore token. */
+router.post(
+  '/restore',
+  checkRequired(['email']),
+  authController.restore
+);
+
+/** Restore access by restore token. */
+router.post(
+  '/restore-access',
+  fingerprint(),
+  checkRequired(['token']),
+  authController.restoreAccess
+);
+
 module.exports = router;

@@ -17,6 +17,17 @@ class ResourceNotFoundError extends DomainError {
   }
 }
 
+/**
+ * For Document in database not found error
+ */
+class DocumentNotFoundError extends DomainError {
+  constructor(message) {
+    super(message);
+  }
+}
+
+
+
 // I do something like this to wrap errors from other frameworks.
 // Correction thanks to @vamsee on Twitter:
 // https://twitter.com/lakamsani/status/1035042907890376707
@@ -46,4 +57,5 @@ module.exports = {
   InternalError,
   ValidationError,
   DuplicateKeyError,
+  DocumentNotFoundError
 };
